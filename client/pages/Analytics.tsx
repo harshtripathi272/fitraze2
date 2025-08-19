@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,11 +21,24 @@ import {
   Zap,
   Award
 } from "lucide-react";
-
+const API_BASE_URL = "http://localhost:8000/api/v1"; // Or your actual API URL
+const USER_ID = 1;
+interface AnalyticsData {
+  weekly_calories: { day: string; calories: number; goal: number }[];
+  weekly_macros: {
+    day: string;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }[];
+  weight_progress: { week: string; weight: number }[];
+}
 export default function Analytics() {
   const [activeTab, setActiveTab] = useState("calories");
   const [chartLoaded, setChartLoaded] = useState(false);
-
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   // Suppress defaultProps warnings for Recharts on component mount
   useEffect(() => {
     const originalWarn = console.warn;
@@ -61,37 +75,28 @@ export default function Analytics() {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get<AnalyticsData>(
+          `${API_BASE_URL}/users/${USER_ID}/analytics`
+        );
+        setAnalyticsData(response.data);
+        setError(null);
+      } catch (err) {
+        setError("Failed to fetch analytics data. Please try again later.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
   // Mock data for charts
-  const weeklyCalories = [
-    { day: 'Mon', calories: 2100, goal: 2200 },
-    { day: 'Tue', calories: 2300, goal: 2200 },
-    { day: 'Wed', calories: 1950, goal: 2200 },
-    { day: 'Thu', calories: 2180, goal: 2200 },
-    { day: 'Fri', calories: 2050, goal: 2200 },
-    { day: 'Sat', calories: 2400, goal: 2200 },
-    { day: 'Sun', calories: 2150, goal: 2200 },
-  ];
-
-  // New macro tracking data for line chart
-  const weeklyMacros = [
-    { day: 'Mon', protein: 140, carbs: 220, fat: 75 },
-    { day: 'Tue', protein: 155, carbs: 200, fat: 80 },
-    { day: 'Wed', protein: 125, carbs: 180, fat: 65 },
-    { day: 'Thu', protein: 148, carbs: 210, fat: 78 },
-    { day: 'Fri', protein: 135, carbs: 195, fat: 70 },
-    { day: 'Sat', protein: 160, carbs: 240, fat: 85 },
-    { day: 'Sun', protein: 145, carbs: 205, fat: 72 },
-  ];
-
-  const weightProgress = [
-    { week: 'W1', weight: 70.5 },
-    { week: 'W2', weight: 70.2 },
-    { week: 'W3', weight: 69.8 },
-    { week: 'W4', weight: 69.5 },
-    { week: 'W5', weight: 69.1 },
-    { week: 'W6', weight: 68.8 },
-    { week: 'W7', weight: 68.5 },
-  ];
+  
 
   // Custom tooltip component
   const MacroTooltip = ({ active, payload, label }: any) => {
@@ -122,6 +127,38 @@ export default function Analytics() {
     }
     return null;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Activity className="w-8 h-8 animate-spin text-primary" />
+        <p className="ml-4 text-lg">Loading Analytics...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  // This check prevents a crash if the API returns no data
+  if (!analyticsData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>No analytics data available.</p>
+      </div>
+    );
+  }
+
+  // --- 👇 (BONUS) CALCULATE DYNAMIC VALUES FOR SUMMARY CARDS ---
+  const totalWeightLost = (analyticsData.weight_progress[0]?.weight - analyticsData.weight_progress[analyticsData.weight_progress.length - 1]?.weight).toFixed(1);
+  const avgDailyCalories = (analyticsData.weekly_calories.reduce((sum, day) => sum + day.calories, 0) / analyticsData.weekly_calories.length).toFixed(0);
+  const goalsHit = analyticsData.weekly_calories.filter(day => day.calories <= day.goal).length;
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-3 sm:p-4">
@@ -167,7 +204,7 @@ export default function Analytics() {
             <CardContent>
               <div className="h-48 sm:h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={weeklyCalories}>
+                  <LineChart data={analyticsData.weekly_calories}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                     <XAxis 
                       dataKey="day" 
@@ -272,7 +309,7 @@ export default function Analytics() {
 
               <div className="h-48 sm:h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={weeklyMacros}>
+                  <LineChart data={analyticsData.weekly_macros}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                     <XAxis 
                       dataKey="day" 
@@ -368,7 +405,7 @@ export default function Analytics() {
             <CardContent>
               <div className="h-48 sm:h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={weightProgress}>
+                  <LineChart data={analyticsData.weight_progress}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                     <XAxis 
                       dataKey="week" 

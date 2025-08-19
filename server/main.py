@@ -9,6 +9,7 @@ import server.models
 from server.routes.demo import router as demo_router
 from server.routes.login import router as login_router
 from server.routes.chat import router as chat_router
+from server.routes.analytics import router as analytics_router
 from server.routes.home import router as food_get
 from server.routes.google_fit import router as google_fit
 from server.routes.sleepLog import router as sleepLog
@@ -43,6 +44,7 @@ app.include_router(chat_router)
 app.include_router(food_get)
 app.include_router(google_fit)
 app.include_router(sleepLog)
+app.include_router(analytics_router)
 
 # Middleware
 

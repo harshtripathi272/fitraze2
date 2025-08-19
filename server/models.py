@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Date, JSON,DECIMAL, ForeignKey,D
 from sqlalchemy.orm import relationship
 from server.database import Base
 from datetime import datetime
+from sqlalchemy import UniqueConstraint
 # from pgvector.sqlalchemy import Vector
 import enum
 
@@ -253,4 +254,28 @@ class ChatSession(Base):
     user = relationship("User", back_populates="chat_sessions")
    
 
+
+
+class DailyNutritionLog(Base):
+    __tablename__ = "daily_nutrition_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    date = Column(Date, nullable=False)
+
+    # Calorie Info
+    calories = Column(Float, nullable=False)
+    calorie_goal = Column(Float, nullable=True)
+
+    # Macro Info
+    protein_grams = Column(Float, nullable=False)
+    carbs_grams = Column(Float, nullable=False)
+    fat_grams = Column(Float, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+
+    # Ensure a user can only have one nutrition log per day
+    __table_args__ = (UniqueConstraint('user_id', 'date', name='_user_date_uc'),)
 

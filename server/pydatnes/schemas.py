@@ -101,3 +101,50 @@ class User(UserBase):
 
     class Config:
         from_attributes = True
+# Add these new classes to your schemas.py file
+
+# --- Schemas for Daily Nutrition Logging ---
+
+class DailyNutritionLogBase(BaseModel):
+    date: date
+    calories: float
+    calorie_goal: Optional[float] = None
+    protein_grams: float
+    carbs_grams: float
+    fat_grams: float
+
+class DailyNutritionLogCreate(DailyNutritionLogBase):
+    pass
+
+class DailyNutritionLogResponse(DailyNutritionLogBase):
+    id: int
+    user_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# --- Schemas for Analytics API Responses ---
+
+class WeeklyCalorieDataPoint(BaseModel):
+    day: str
+    calories: float
+    goal: Optional[float] = None
+
+class WeeklyMacroDataPoint(BaseModel):
+    day: str
+    protein: float
+    carbs: float
+    fat: float
+
+class WeeklyWeightDataPoint(BaseModel):
+    week: str
+    weight: float
+
+
+class AnalyticsResponse(BaseModel):
+    weekly_calories: List[WeeklyCalorieDataPoint]
+    weekly_macros: List[WeeklyMacroDataPoint]
+    weight_progress: List[WeeklyWeightDataPoint]
+
