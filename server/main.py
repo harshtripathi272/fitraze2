@@ -56,6 +56,7 @@ app.include_router(food_get)
 app.include_router(google_fit)
 app.include_router(sleepLog)
 app.include_router(water_log)
+app.include_router(analytics_router)
 
 # Middleware to serve the Single Page Application (SPA)
 @app.get("/{full_path:path}")
