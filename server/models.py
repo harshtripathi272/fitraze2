@@ -26,6 +26,7 @@ class User(Base):
     goals = relationship("FitnessGoal", back_populates="user")
     chat_sessions = relationship("ChatSession", back_populates="user")
     sleep_logs = relationship("SleepLog", back_populates="user", cascade="all, delete-orphan")
+    water_logs = relationship("WaterLog", back_populates="user")
     weekly_sleep_summaries = relationship("WeeklySleepSummary", back_populates="user", cascade="all, delete-orphan")
     bedtime_reminder = relationship("BedtimeReminder", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
@@ -194,7 +195,22 @@ class SleepLog(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("User", back_populates="sleep_logs")
+# Hydration Tracking
+class WaterLog(Base):
+    __tablename__ = "water_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    amount_ml = Column(Integer, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    user = relationship("User", back_populates="water_logs")
 
+
+    timestamp = Column(DateTime, default=datetime.utcnow)  # When entry was added
+
+    def _repr_(self):
+        return f"<FoodEntry(name={self.food_name}, meal={self.meal_type}, calories={self.calories})>"
+    
+# class MealLog(Base):
 
 class WeeklySleepSummary(Base):
     __tablename__ = "weekly_sleep_summaries"

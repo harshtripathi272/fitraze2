@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+// ADDED: Import axios to handle API requests directly in this file
+import axios from 'axios';
 import {
   Dialog,
   DialogContent,
@@ -29,12 +31,49 @@ import {
   Heart
 } from "lucide-react";
 
+
+// =================================================================
+// --- API LOGIC (Moved from api.ts into this file) ---
+// =================================================================
+
+const API_URL = 'http://127.0.0.1:8000/api/v1';
+
+const apiClient = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// This function sends a POST request
+const logWater = (amount_ml: number) => {
+  return apiClient.post('/water', { amount_ml });
+};
+
+const getTodaysWater = () => {
+  return apiClient.get('/water/today');
+};
+
+// =================================================================
+// --- REACT COMPONENT ---
+// =================================================================
+
+
 interface WaterLogDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentIntake: number;
-  goal: number;
-  onWaterAdded: (amount: number, isIce?: boolean) => void;
+  onDataChange: () => void; // <-- ADD THIS LINE
 }
 
 const hydrationBenefits = [
@@ -54,11 +93,18 @@ const quickAddAmounts = [
 
 export function WaterLogDialog({ 
   open, 
-  onOpenChange, 
-  currentIntake, 
-  goal, 
-  onWaterAdded 
+  onOpenChange,
+  onDataChange
 }: WaterLogDialogProps) {
+  // State for data from the backend
+  const [totalIntake, setTotalIntake] = useState(0);
+  const [goal, setGoal] = useState(3000); 
+
+  // State for API communication status
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Your original UI state remains untouched
   const [customAmount, setCustomAmount] = useState(250);
   const [isIceMode, setIsIceMode] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -67,9 +113,29 @@ export function WaterLogDialog({
   const [currentBenefit] = useState(
     hydrationBenefits[Math.floor(Math.random() * hydrationBenefits.length)]
   );
+  
+  const progress = goal > 0 ? Math.min((totalIntake / goal) * 100, 100) : 0;
+  const isGoalReached = totalIntake >= goal;
 
-  const progress = goal > 0 ? Math.min((currentIntake / goal) * 100, 100) : 0;
-  const isGoalReached = currentIntake >= goal;
+  const fetchTodaysData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await getTodaysWater();
+      setTotalIntake(response.data.total_ml);
+    } catch (err) {
+      setError("Failed to fetch water data.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchTodaysData();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (isGoalReached && !showCelebration) {
@@ -77,15 +143,33 @@ export function WaterLogDialog({
       const timer = setTimeout(() => setShowCelebration(false), 3000);
       return () => clearTimeout(timer);
     }
-  }, [isGoalReached, showCelebration]);
+  }, [totalIntake, isGoalReached, showCelebration]);
 
-  const handleAddWater = (amount: number) => {
-    onWaterAdded(amount, isIceMode);
+  const handleAddWater = async (amount: number) => {
+    if (amount <= 0 || isLoading) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      await logWater(amount); // This function now lives at the top of this file
+      await fetchTodaysData();
+      onDataChange();
+    } catch (err) {
+      setError("Failed to log water. Please try again.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  const incrementCustomAmount = () => {
+    setCustomAmount((prev) => Math.min(prev + 50, 1500));
+  };
+
+  // Your full WaterBottleAnimation component and the rest of the JSX
+  // ... (All your original JSX from the 380-line file goes here)
   const WaterBottleAnimation = () => {
     const bottleHeight = 200;
-    const fillHeight = (progress / 100) * (bottleHeight - 40); // Account for bottle cap
+    const fillHeight = (progress / 100) * (bottleHeight - 40);
 
     return (
       <div className="relative mx-auto" style={{ width: '80px', height: `${bottleHeight}px` }}>
@@ -140,7 +224,7 @@ export function WaterLogDialog({
             <div className="text-center">
               <div className="text-sm font-bold text-primary">{Math.round(progress)}%</div>
               <div className="text-xs text-muted-foreground">
-                {(currentIntake / 1000).toFixed(1)}L
+                {(totalIntake / 1000).toFixed(1)}L
               </div>
             </div>
           </div>
@@ -178,9 +262,7 @@ export function WaterLogDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <TooltipProvider>
-        {/* This style tag adds custom scrollbar styles.
-          The 'custom-scrollbar' class is then applied to DialogContent.
-        */}
+        {/* Your custom scrollbar style tag */}
         <style>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
@@ -215,7 +297,7 @@ export function WaterLogDialog({
               <div className="mt-4">
                 <p className="text-sm text-muted-foreground mb-1">Daily Progress</p>
                 <p className="font-semibold">
-                  {(currentIntake / 1000).toFixed(1)}L of {(goal / 1000).toFixed(1)}L
+                  {(totalIntake / 1000).toFixed(1)}L of {(goal / 1000).toFixed(1)}L
                 </p>
                 {isGoalReached && (
                   <Badge className="mt-2 glow-accent animate-pulse">
@@ -223,6 +305,8 @@ export function WaterLogDialog({
                     Goal Reached! 🎉
                   </Badge>
                 )}
+                {isLoading && <p className="text-xs text-primary mt-2 animate-pulse">Syncing...</p>}
+                {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
               </div>
             </div>
 
@@ -261,6 +345,7 @@ export function WaterLogDialog({
                     variant="outline"
                     className="glass-card h-16 flex-col space-y-1 glow"
                     onClick={() => handleAddWater(item.amount)}
+                    disabled={isLoading}
                   >
                     <span className="text-lg">{item.icon}</span>
                     <span className="text-xs">{item.amount}ml</span>
@@ -283,23 +368,13 @@ export function WaterLogDialog({
                     placeholder="250"
                   />
                   <span className="text-sm text-muted-foreground">ml</span>
-                </div>
-
-                {/* Slider for custom amount */}
-                <div className="space-y-2">
-                  <Slider
-                    value={[customAmount]}
-                    onValueChange={(value) => setCustomAmount(value[0])}
-                    max={1500}
-                    min={50}
-                    step={50}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>50ml</span>
-                    <span>{customAmount}ml</span>
-                    <span>1500ml</span>
-                  </div>
+                  <Button 
+                    onClick={incrementCustomAmount}
+                    className="glow-accent"
+                    disabled={customAmount >= 1500}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -368,10 +443,16 @@ export function WaterLogDialog({
                 size="lg"
                 className="w-full glow-accent"
                 onClick={() => handleAddWater(customAmount)}
-                disabled={customAmount <= 0}
+                disabled={customAmount <= 0 || isLoading}
               >
-                <Droplet className="w-5 h-5 mr-2" />
-                Log {customAmount}ml Water
+                {isLoading ? (
+                  "Logging..."
+                ) : (
+                  <>
+                    <Droplet className="w-5 h-5 mr-2" />
+                    Log {customAmount}ml Water
+                  </>
+                )}
               </Button>
             </div>
           </div>
