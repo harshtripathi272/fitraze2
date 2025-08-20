@@ -20,19 +20,15 @@ def _calculate_default_goals(user_profile: models.UserProfile, latest_stat: mode
     Calculates default calorie and macro goals if no active FitnessGoal is set.
     Uses Mifflin-St Jeor formula for BMR and a DYNAMIC activity multiplier from the user's profile.
     """
-    # MODIFIED: Check for user_profile.age instead of date_of_birth
-    if not all([
-        user_profile,
-        user_profile.age,  # Check for the age field
-        user_profile.gender,
-        latest_stat,
-        latest_stat.weight_kg,
-        latest_stat.height_cm
-    ]):
-        return 2000, 150, 200, 89 # Return generic defaults if data is incomplete
+    # First guard clause: if user_profile itself is missing
+    if not user_profile or not latest_stat:
+        return (2000, 150, 200, 89)
+
+    # Second guard: check fields individually
+    if not (user_profile.age and user_profile.gender and latest_stat.weight_kg and latest_stat.height_cm):
+        return (2000, 150, 200, 89)
 
     # --- 1. Use the age directly from the profile ---
-    # REMOVED: The old logic that calculates age from date_of_birth
     age = user_profile.age
 
     # --- 2. Calculate BMR using Mifflin-St Jeor ---
@@ -55,7 +51,7 @@ def _calculate_default_goals(user_profile: models.UserProfile, latest_stat: mode
     }
     activity_multiplier = activity_multipliers.get(user_profile.activity_level, 1.375)
 
-    # --- 4. Calculate TDEE (Total Daily Energy Expenditure) ---
+    # --- 4. Calculate TDEE ---
     tdee = bmr * activity_multiplier
 
     # --- 5. Calculate Macros ---
@@ -65,6 +61,9 @@ def _calculate_default_goals(user_profile: models.UserProfile, latest_stat: mode
     fat = round((tdee * 0.30) / 9)
 
     return calories, protein, carbs, fat
+
+
+
 @router.get("/users/{user_id}/analytics", response_model=schemas.AnalyticsResponse)
 def get_user_analytics(user_id: int, db: Session = Depends(get_db)):
     """

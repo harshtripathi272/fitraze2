@@ -143,7 +143,7 @@ class FoodEntry(Base):
     __tablename__ = "food_entries"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.user_id"), unique=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     food_name = Column(String, nullable=False)            # e.g., "Dal"
     quantity = Column(Float, nullable=False)              # e.g., 100
     unit = Column(String, default="grams")                # e.g., "grams"

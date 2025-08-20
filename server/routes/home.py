@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from enum import Enum
 from sqlalchemy.orm import Session
 from typing import Optional
+from server.auth import get_current_user
 
 
 
@@ -46,8 +47,11 @@ async def search_foods(query:str=Query(...,description="Food name to search")):
     
 
 @router.post("/api/v1/food-entry")
-def create_food_entry(entry: FoodEntryCreate, db: Session = Depends(get_db)):
+def create_food_entry(entry: FoodEntryCreate, db: Session = Depends(get_db),current_user=Depends(get_current_user)):
+
+    user_id=current_user.user_id
     db_entry = FoodEntry(
+        user_id=user_id,
         food_name=entry.name,
         quantity=entry.quantity,
         unit=entry.unit,

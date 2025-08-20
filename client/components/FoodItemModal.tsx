@@ -94,10 +94,14 @@ export function FoodItemModal({ open, onOpenChange, food, onFoodAdded, mealType 
 
     setLoading(true);
     try {
+      const storedUser = JSON.parse(localStorage.getItem("fitRazeUser") || "{}");
+      const token = localStorage.getItem("access_token") || storedUser.token;
+      if (!token) { alert("Please log in first."); return; }
       const response = await fetch("http://localhost:8000/api/v1/food-entry", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           

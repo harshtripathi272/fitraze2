@@ -52,6 +52,17 @@ interface SleepData {
   notes?: string;
 }
 
+interface SleepLogPayload {
+  date: string;
+  sleep_duration_hours: number;
+  duration_label: string;
+  bedtime: string;
+  wake_up: string;
+  sleep_quality_score: number;
+  sleep_quality_label: string;
+  streak_count: number;
+}
+
 const sleepTips = [
   "Avoid screens 1 hour before bedtime for better sleep quality",
   "Keep your bedroom temperature between 60-67°F (15-19°C)",
@@ -108,7 +119,9 @@ export function SleepLogDialog({ open, onOpenChange, onSleepLogged }: SleepLogDi
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState("22:00");
   const [currentTip] = useState(sleepTips[Math.floor(Math.random() * sleepTips.length)]);
-  const [sleepStreak] = useState(5); // Mock streak data
+  const[alreadyLogged,setAlreadyLogged] = useState(false); 
+  const[weeklyData,setWeeklyData]=useState<number[]>([0,0,0,0,0,0,0]); 
+  const [sleepStreak,setSleepStreak] = useState(0); // Mock streak data
 
   const timeOptions = generateTimeOptions();
   const duration = calculateSleepDuration(bedTime, wakeTime);
@@ -184,65 +197,109 @@ export function SleepLogDialog({ open, onOpenChange, onSleepLogged }: SleepLogDi
       </div>
     );
   };
-
-  const handleLogSleep = async () => {
-  const sleepData: SleepData = {
-    bedTime,
-    wakeTime,
-    duration,
-    quality: quality[0]
-  };
-
-  try {
-    const storedUser=JSON.parse(localStorage.getItem("fitRazeUser") || "{}")
-    const token = localStorage.getItem("access_token") || storedUser.token; // Adjust if you store it differently
-    
-    if (!token) {
-      alert("Please log in first.");
+  useEffect(()=>{
+    if(!open) return;
+    console.log("useEffect triggered, open =", open);
+    const storedUser = JSON.parse(localStorage.getItem("fitRazeUser") || "{}");
+    const token = localStorage.getItem("access_token") || storedUser.token; 
+    if(!token){
       return;
     }
+    const formatTime = (timeString: string) => {
+        if (!timeString) return "";
+        return timeString.slice(0, 5); 
+      };
+    fetch("http://localhost:8000/sleep/today", {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.logged === true) {
+          setAlreadyLogged(true);
+          setBedTime(formatTime(data.bedtime)); // prefill from backend
+          setWakeTime(formatTime(data.wake_up));
+          setQuality([data.sleep_quality_score]);
+          setSleepStreak(data.streak_count || 0);
+        } else {
+          setAlreadyLogged(false);
+        }
+      })
+      .catch(() => setAlreadyLogged(false));
 
-    const response = await fetch("http://localhost:8000/sleep/log", {
-      method: "POST",
+    // Fetch weekly summary
+    fetch("http://localhost:8000/sleep/weekly", {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then(async res=>{
+        const text=await res.text();
+        console.log("Weekly sleep data:", text);
+      try{
+        const data=JSON.parse(text);
+        console.log("weekly API parsed data:", data);
+        setWeeklyData([
+          data.mon_hours || 0,
+          data.tue_hours || 0,
+          data.wed_hours || 0,
+          data.thu_hours || 0,
+          data.fri_hours || 0,
+          data.sat_hours || 0,
+          data.sun_hours || 0,
+        ]);
+        }catch(err){
+          console.log("Error parsing weekly data:", err);
+        }
+      })
+      .catch(err => console.error("Weekly API request failed:", err));
+  }, [open]);
+
+  const handleLogSleep = async () => {
+      const sleepData: SleepData = {
+      bedTime,
+      wakeTime,
+      duration,
+      quality: quality[0]
+    };
+    const storedUser = JSON.parse(localStorage.getItem("fitRazeUser") || "{}");
+    const token = localStorage.getItem("access_token") || storedUser.token;
+    if (!token) { alert("Please log in first."); return; }
+
+    const payload:SleepLogPayload = {
+      date: new Date().toLocaleDateString("en-CA"),
+      sleep_duration_hours: duration,
+      duration_label:
+        duration >= 7 && duration <= 9 ? "Optimal" :
+        duration >= 6 ? "Adequate" : "Insufficient",
+      bedtime: new Date(`${new Date().toISOString().split("T")[0]}T${bedTime}:00`).toISOString(),
+      wake_up: new Date(`${new Date().toISOString().split("T")[0]}T${wakeTime}:00`).toISOString(),
+      sleep_quality_score: quality[0],
+      sleep_quality_label: qualityLabels[quality[0] as keyof typeof qualityLabels].label,
+      streak_count: sleepStreak
+    };
+
+    const formatDate=payload.date.split("T")[0];
+    const url=alreadyLogged
+    ? `http://localhost:8000/sleep/log/${formatDate}` // PUT with date in URL
+    : "http://localhost:8000/sleep/log"; 
+
+    const response = await fetch(url, {
+      method: alreadyLogged ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
       },
-      body: JSON.stringify({
-      date: new Date().toISOString(),
-      sleep_duration_hours: sleepData.duration,
-      duration_label:
-        sleepData.duration >= 7 && sleepData.duration <= 9
-          ? "Optimal"
-          : sleepData.duration >= 6
-          ? "Adequate"
-          : "Insufficient",
-      bedtime: new Date(`${new Date().toISOString().split("T")[0]}T${sleepData.bedTime}:00`).toISOString(),
-      wake_up: new Date(`${new Date().toISOString().split("T")[0]}T${sleepData.wakeTime}:00`).toISOString(),
-      sleep_quality_score: sleepData.quality,
-      sleep_quality_label:qualityLabels[sleepData.quality as keyof typeof qualityLabels].label,
-      streak_count: 0
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
       const err = await response.json();
-      throw new Error(err.detail || "Failed to log sleep");
+      alert(err.detail || "Failed to log sleep");
+      return;
     }
 
     const result = await response.json();
-    console.log("Sleep log added:", result);
-
-    // Update parent component (if needed)
+    console.log("Sleep log saved:", result);
     onSleepLogged(sleepData);
-
-    // Close dialog
     onOpenChange(false);
-
-    }catch (error) {
-    console.error("Error logging sleep:", error);
-    alert("Failed to log sleep. Please try again.");
-    }
   };
 
 
@@ -362,36 +419,47 @@ export function SleepLogDialog({ open, onOpenChange, onSleepLogged }: SleepLogDi
 
           {/* Weekly Sleep Chart */}
           <Card className="glass-card border-glass-border">
-            <CardContent className="p-4">
-              <h3 className="text-sm font-semibold mb-3 flex items-center">
-                <TrendingUp className="w-4 h-4 mr-1 text-primary" />
-                This Week's Sleep
-              </h3>
-              
-              <div className="grid grid-cols-7 gap-1">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => {
-                  const isToday = index === 3; // Mock today as Thursday
-                  const hours = [7.5, 6.2, 8.1, 7.8, 6.9, 8.5, 7.2][index];
-                  const isGoodSleep = hours >= 7 && hours <= 9;
-                  
-                  return (
-                    <div key={day} className="text-center">
-                      <div className="text-xs text-muted-foreground mb-1">{day}</div>
-                      <div className={`w-6 h-6 rounded-full mx-auto flex items-center justify-center text-xs font-medium ${
-                        isToday 
-                          ? 'border-2 border-primary bg-primary/20' 
-                          : isGoodSleep 
-                            ? 'bg-green-400/20 text-green-400' 
-                            : 'bg-yellow-400/20 text-yellow-400'
-                      }`}>
-                        {hours.toFixed(0)}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+              <CardContent className="p-4">
+                <h3 className="text-sm font-semibold mb-3 flex items-center">
+                  <TrendingUp className="w-4 h-4 mr-1 text-primary" />
+                  This Week's Sleep
+                </h3>
+                
+                <div className="grid grid-cols-7 gap-1">
+                    {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day, index) => {
+                      const isToday = index === new Date().getDay() - 1; // 0=Sunday → shift
+                      const hours = weeklyData[index] ?? 0;
+
+                      let colorClass = "bg-gray-400/20 text-gray-400"; // default: no sleep
+                      if (hours === 0) {
+                        colorClass = "bg-gray-400/20 text-gray-400";
+                      } else if (hours < 6) {
+                        colorClass = "bg-red-500/20 text-red-400 border-red-400";
+                      } else if (hours >= 6 && hours < 7) {
+                        colorClass = "bg-yellow-500/20 text-yellow-400 border-yellow-400";
+                      } else if (hours >= 7 && hours <= 9) {
+                        colorClass = "bg-green-500/20 text-green-400 border-green-400";
+                      } else if (hours > 9) {
+                        colorClass = "bg-purple-500/20 text-purple-400 border-purple-400";
+                      }
+
+                      return (
+                        <div key={day} className="text-center">
+                          <div className="text-xs text-muted-foreground mb-1">{day}</div>
+                          <div
+                            className={`w-6 h-6 rounded-full mx-auto flex items-center justify-center text-xs font-medium ${
+                              isToday ? "border-2 border-primary bg-primary/20" : colorClass
+                            }`}
+                          >
+                            {hours>0 ? hours.toFixed(1) : "0"}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+              </CardContent>
+            </Card>
 
           {/* Sleep Hygiene Tip */}
           <Card className="glass-card border-glass-border glow">
@@ -455,13 +523,13 @@ export function SleepLogDialog({ open, onOpenChange, onSleepLogged }: SleepLogDi
 
           {/* Log Sleep Button */}
           <Button 
-            className="w-full glow"
-            onClick={handleLogSleep}
-            disabled={!bedTime || !wakeTime}
-          >
-            <Clock className="w-4 h-4 mr-2" />
-            Log Sleep ({duration.toFixed(1)}h)
-          </Button>
+              className="w-full glow"
+              onClick={handleLogSleep}
+              disabled={!bedTime || !wakeTime}
+            >
+              <Clock className="w-4 h-4 mr-2" />
+              {alreadyLogged ? "Update Sleep" : "Log Sleep"} ({duration.toFixed(1)}h)
+            </Button>
         </div>
       </DialogContent>
     </Dialog>

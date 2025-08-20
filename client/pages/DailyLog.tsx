@@ -31,6 +31,8 @@ import {
   isSameDay,
 } from "date-fns";
 import { cn } from "@/lib/utils";
+import axios from "axios"
+
 
 export default function DailyLog() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -41,6 +43,7 @@ export default function DailyLog() {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScrollEffects();
+  const [sleepData,setSleepData]=useState<any>(null);
 
   // Animation refs for intersection observer
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -72,6 +75,25 @@ export default function DailyLog() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(()=>{
+    const fetchSleepData=async()=>{
+      try{
+        const formattedDate = selectedDate.toLocaleDateString("en-CA");
+        const token=localStorage.getItem("access_token");
+        const res=await axios.get(`/api/v1/sleep/day/${formattedDate}`,{
+          headers:{
+            Authorization:`Bearer ${token}`
+          }
+        });
+        setSleepData(res.data)
+      }catch (err){
+        console.log("Error fetching sleep data",err);
+        setSleepData(null);
+      }
+    };
+    fetchSleepData();
+  },[selectedDate])
+
   // Mock data for different dates
   const getDayData = (date: Date) => {
     const dayOfWeek = date.getDay();
@@ -87,14 +109,6 @@ export default function DailyLog() {
           { time: "19:10", amount: 300, type: "glass" },
           { time: "21:00", amount: 200, type: "glass" },
         ],
-      },
-      sleep: {
-        current: 7.5 + dayOfWeek * 0.2,
-        goal: 8,
-        bedTime: "22:30",
-        wakeTime: "07:00",
-        quality: 4,
-        notes: "Felt refreshed, good sleep quality",
       },
       meals: {
         current: 3 + (dayOfWeek % 2),
@@ -164,6 +178,22 @@ export default function DailyLog() {
   };
 
   const currentData = getDayData(selectedDate);
+
+  const sleepCardData=sleepData ? {
+      current: sleepData.sleep_duration_hours ?? 0,
+      goal: 8,
+      bedTime: sleepData.bedtime ?? "22:30",
+      wakeTime: sleepData.wake_up ?? "07:00",
+      quality: sleepData.sleep_quality_score ?? 3,
+      notes: sleepData.sleep_quality_label ?? "No data",
+  }:{
+    current: 0,
+    goal: 8,
+    bedTime: "--:--",
+    wakeTime: "--:--",
+    quality: 0,
+    notes: "No sleep data logged",
+  };
 
   // Generate calendar days (7 days visible, scrollable)
   const getCalendarDays = () => {
@@ -371,7 +401,7 @@ export default function DailyLog() {
             >
               {getCalendarDays().map((day, index) => (
                 <Button
-                  key={day.date.toISOString()}
+                  key={`${day.date.getFullYear()}-${day.date.getMonth()}-${day.date.getDate()}`}
                   variant={day.isSelected ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedDate(day.date)}
@@ -481,26 +511,24 @@ export default function DailyLog() {
           </TrackingCard>
 
           {/* Sleep Card */}
+          
           <TrackingCard
             id="sleep"
             icon={Moon}
             title="Sleep"
-            current={currentData.sleep.current}
-            goal={currentData.sleep.goal}
+            current={sleepCardData.current}
+            goal={sleepCardData.goal}
             unit="hours"
-            color="accent"
-          >
+            color="accent">
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Bedtime:</span>
-                  <div className="font-medium">{currentData.sleep.bedTime}</div>
+                  <div className="font-medium">{sleepCardData.bedTime}</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Wake Up:</span>
-                  <div className="font-medium">
-                    {currentData.sleep.wakeTime}
-                  </div>
+                  <div className="font-medium">{sleepCardData.wakeTime}</div>
                 </div>
               </div>
               <div>
@@ -511,22 +539,20 @@ export default function DailyLog() {
                       key={star}
                       className={cn(
                         "w-4 h-4 rounded-full mr-1",
-                        star <= currentData.sleep.quality
+                        star <= sleepCardData.quality
                           ? "bg-yellow-400"
                           : "bg-gray-600",
                       )}
                     />
                   ))}
-                  <span className="ml-2 text-sm font-medium">Excellent</span>
+                  <span className="ml-2 text-sm font-medium">
+                    {sleepCardData.notes}
+                  </span>
                 </div>
               </div>
-              {currentData.sleep.notes && (
-                <div className="text-sm text-muted-foreground italic">
-                  "{currentData.sleep.notes}"
-                </div>
-              )}
             </div>
           </TrackingCard>
+
 
           {/* Meals Card */}
           <TrackingCard
