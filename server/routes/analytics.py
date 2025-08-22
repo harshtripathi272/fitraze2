@@ -4,7 +4,7 @@ from sqlalchemy import func
 from datetime import datetime, timedelta, date
 from typing import List
 from sqlalchemy.orm import  joinedload # Make sure joinedload is imported
-
+from server.auth import get_current_user
 # Adjust these imports based on your project structure
 from server import models
 from server.pydatnes import schemas
@@ -65,13 +65,16 @@ def _calculate_default_goals(user_profile: models.UserProfile, latest_stat: mode
 
 
 @router.get("/users/{user_id}/analytics", response_model=schemas.AnalyticsResponse)
-def get_user_analytics(user_id: int, db: Session = Depends(get_db)):
+def get_user_analytics(user_id: int, db: Session = Depends(get_db),current_user:models.User=Depends(get_current_user)):
     """
     Retrieve a consolidated report of weekly analytics data for a user,
     including calories, macros, and weight progress.
     Goals are now sourced from the active FitnessGoal or calculated dynamically.
     """
     
+    if current_user.user_id!=user_id:
+        raise HTTPException(status_code=403,detail="Not authorized to access this user's analytics")
+
     # --- CORRECTED: Efficiently load the user and their profile in one query ---
     user = db.query(models.User).options(
         joinedload(models.User.profile)

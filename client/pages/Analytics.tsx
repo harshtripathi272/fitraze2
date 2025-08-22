@@ -21,6 +21,8 @@ import {
   Zap,
   Award
 } from "lucide-react";
+import { jwtDecode } from 'jwt-decode';
+
 const API_BASE_URL = "http://localhost:8000/api/v1"; // Or your actual API URL
 const USER_ID = 1;
 interface AnalyticsData {
@@ -33,6 +35,11 @@ interface AnalyticsData {
   }[];
   weight_progress: { week: string; weight: number }[];
 }
+interface JWTPayload{
+  sub;string;
+  exp:number;
+}
+
 export default function Analytics() {
   const [activeTab, setActiveTab] = useState("calories");
   const [chartLoaded, setChartLoaded] = useState(false);
@@ -79,8 +86,25 @@ export default function Analytics() {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
+        const token=localStorage.getItem("access_token");
+        if(!token){
+            setError("User not authenticated");
+            return;
+          
+        }
+        const decoded:JWTPayload=jwtDecode(token);
+        if(!decoded|| !decoded.sub){
+          setError("Invalid token");
+          return;
+        }
+        const userId=decoded.sub;
         const response = await axios.get<AnalyticsData>(
-          `${API_BASE_URL}/users/${USER_ID}/analytics`
+          `${API_BASE_URL}/users/${userId}/analytics`,
+          {
+            headers:{
+              Authorization:`Bearer ${token}`,
+            },
+          }
         );
         setAnalyticsData(response.data);
         setError(null);

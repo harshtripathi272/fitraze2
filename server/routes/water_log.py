@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from pydantic import BaseModel
-from datetime import date
+from datetime import datetime
 from .. import models
 from ..database import get_db
 from ..auth import get_current_user
@@ -46,7 +46,7 @@ def get_todays_water(
     # Corrected parameter name and type hint
     current_user: models.User = Depends(get_current_user)
 ):
-    today = date.today()
+    today=datetime.utcnow().date()
 
     # Corrected the filter query
     total_intake = db.query(func.sum(models.WaterLog.amount_ml)).filter(
