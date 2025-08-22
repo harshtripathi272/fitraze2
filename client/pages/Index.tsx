@@ -97,6 +97,7 @@ export default function Index({ user, onLogout }: IndexProps) {
 
   // ... (Your existing useEffects can remain)
   useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
     const originalWarn = console.warn;
     const originalError = console.error;
 
@@ -144,16 +145,48 @@ export default function Index({ user, onLogout }: IndexProps) {
       return () => clearTimeout(timer);
     }
   }, []);
-
-  // State management for all tracking
   const [dailyStats, setDailyStats] = useState({
-    calories: { current: 1847, goal: 2200 },
-    protein: { current: 98, goal: 140 },
-    carbs: { current: 180, goal: 220 },
-    fat: { current: 65, goal: 85 },
-    water: { current: 0, goal: 3000 }, // Start at 0, will be fetched from API
+    calories: { current: 0, goal: 2200 },
+    protein: { current: 0, goal: 140 },
+    carbs: { current: 0, goal: 220 },
+    fat: { current: 0, goal: 85 },
+    water: { current: 0, goal: 3000 },
     sleep: { current: 7.5, goal: 8 },
   });
+
+
+  // State management for all tracking
+  const getDailyNutrition = () => {
+    return apiClient.get('/daily-nutrition');
+  };
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setLoading(true);
+      try {
+        const [waterResponse, nutritionResponse] = await Promise.all([
+          getTodaysWater(),
+          getDailyNutrition()
+        ]);
+
+        setDailyStats({
+          calories: nutritionResponse.data.calories,
+          protein: nutritionResponse.data.protein,
+          carbs: nutritionResponse.data.carbs,
+          fat: nutritionResponse.data.fat,
+          water: { current: waterResponse.data.total_ml, goal: 3000 },
+          sleep: { current: 7.5, goal: 8 }
+        });
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+
+
   
   const [loading, setLoading] = useState(true);
 
@@ -170,16 +203,7 @@ export default function Index({ user, onLogout }: IndexProps) {
     }
   };
 
-  // Fetch initial data on component load
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setLoading(true);
-      await refreshWaterData();
-      setLoading(false);
-    };
-
-    fetchInitialData();
-  }, []);
+  
 
 
   // ... (Your other state and macro data calculations can remain)
@@ -195,10 +219,31 @@ export default function Index({ user, onLogout }: IndexProps) {
   const [showLaunchCelebration, setShowLaunchCelebration] = useState(false);
 
   const macroData = [
-    { name: "Protein", value: Math.round(((dailyStats.protein.current * 4) / dailyStats.calories.current) * 100), calories: dailyStats.protein.current * 4, color: "#00BFFF" },
-    { name: "Carbs", value: Math.round(((dailyStats.carbs.current * 4) / dailyStats.calories.current) * 100), calories: dailyStats.carbs.current * 4, color: "#FFC107" },
-    { name: "Fat", value: Math.round(((dailyStats.fat.current * 9) / dailyStats.calories.current) * 100), calories: dailyStats.fat.current * 9, color: "#FF6B6B" },
-  ];
+  {
+    name: "Protein",
+    value: dailyStats.calories.current > 0
+      ? Math.round(((dailyStats.protein.current * 4) / dailyStats.calories.current) * 100)
+      : 0,
+    calories: dailyStats.protein.current * 4,
+    color: "#00BFFF"
+  },
+  {
+    name: "Carbs",
+    value: dailyStats.calories.current > 0
+      ? Math.round(((dailyStats.carbs.current * 4) / dailyStats.calories.current) * 100)
+      : 0,
+    calories: dailyStats.carbs.current * 4,
+    color: "#FFC107"
+  },
+  {
+    name: "Fat",
+    value: dailyStats.calories.current > 0
+      ? Math.round(((dailyStats.fat.current * 9) / dailyStats.calories.current) * 100)
+      : 0,
+    calories: dailyStats.fat.current * 9,
+    color: "#FF6B6B"
+  }
+];
 
   // ... (handleFoodAdded and handleWorkoutCompleted can remain)
   const handleFoodAdded = (food: Food, mealType: string) => {
