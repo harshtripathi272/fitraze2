@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from pydantic import BaseModel
 from datetime import datetime
+from typing import List
 from .. import models
 from ..database import get_db
 from ..auth import get_current_user
@@ -20,6 +21,11 @@ class WaterLogCreate(BaseModel):
 
 class TodaysWaterResponse(BaseModel):
     total_ml: int
+
+class WaterLogResponse(BaseModel):
+    time:str
+    amount:int
+    type:str
 
 # --- API Endpoints ---
 
@@ -55,3 +61,18 @@ def get_todays_water(
     ).scalar()
 
     return {"total_ml": total_intake or 0}
+
+@router.get("/api/v1/water/day/{date}",response_model=List[WaterLogResponse])
+def get_water_logs_at_dates(date:str,db:Session=Depends(get_db),current_user:models.User=Depends(get_current_user)):
+    logs=db.query(models.WaterLog).filter(
+        models.WaterLog.user_id==current_user.user_id,
+        func.date(models.WaterLog.timestamp)==date
+    ).all()
+    return [
+        {
+            "time":log.timestamp.strftime("%H:%M"),
+            "amount":log.amount_ml,
+            "type":"glass"
+        } 
+        for log in logs
+    ]

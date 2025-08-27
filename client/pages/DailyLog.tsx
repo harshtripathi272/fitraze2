@@ -44,6 +44,11 @@ export default function DailyLog() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScrollEffects();
   const [sleepData,setSleepData]=useState<any>(null);
+  const [waterData,setWaterData]=useState<{current:number;goal:number;logs:any[]}>({
+    current:0,
+    goal:200,
+    logs:[],
+  });
 
   // Animation refs for intersection observer
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -94,22 +99,37 @@ export default function DailyLog() {
     fetchSleepData();
   },[selectedDate])
 
+  useEffect(()=>{
+    const fetchWaterData=async()=>{
+      try{
+        const token=localStorage.getItem("access_token");
+        const formattedDate=selectedDate.toLocaleDateString("en-CA");
+
+        const res=await axios.get(`/api/v1/water/day/${formattedDate}`,{
+          headers:{
+            Authorization:`Bearer ${token}`,
+          },
+        });
+        const totalMl=res.data.reduce((sum:number,log:any)=>sum+log.amount,0);
+
+        setWaterData({
+          current:Math.round(totalMl/250),
+          goal:8,
+          logs:res.data,
+        });
+      }catch(err){
+        console.log("Error Fetching water data",err);
+        setWaterData({current:0,goal:8,logs:[]});
+      }
+    };
+    fetchWaterData();
+  },[selectedDate]);
+
   // Mock data for different dates
   const getDayData = (date: Date) => {
     const dayOfWeek = date.getDay();
     const baseData = {
-      water: {
-        current: 6 + dayOfWeek,
-        goal: 8,
-        logs: [
-          { time: "07:30", amount: 250, type: "glass" },
-          { time: "10:15", amount: 500, type: "bottle" },
-          { time: "13:45", amount: 250, type: "glass" },
-          { time: "16:20", amount: 500, type: "bottle" },
-          { time: "19:10", amount: 300, type: "glass" },
-          { time: "21:00", amount: 200, type: "glass" },
-        ],
-      },
+      
       meals: {
         current: 3 + (dayOfWeek % 2),
         goal: 4,
@@ -487,26 +507,25 @@ export default function DailyLog() {
             id="water"
             icon={Droplet}
             title="Water Intake"
-            current={currentData.water.current}
-            goal={currentData.water.goal}
+            current={waterData.current}
+            goal={waterData.goal}
             unit="glasses"
             color="primary"
           >
             <div className="space-y-2">
               <h4 className="font-medium text-sm">Today's Hydration Log</h4>
-              {currentData.water.logs.map((log, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center py-1"
-                >
-                  <span className="text-sm text-muted-foreground">
-                    {log.time}
-                  </span>
-                  <Badge variant="outline" className="glass text-xs">
-                    {log.amount}ml ({log.type})
-                  </Badge>
-                </div>
-              ))}
+              {waterData.logs.length > 0 ? (
+                waterData.logs.map((log, index) => (
+                  <div key={index} className="flex justify-between items-center py-1">
+                    <span className="text-sm text-muted-foreground">{log.time}</span>
+                    <Badge variant="outline" className="glass text-xs">
+                      {log.amount}ml ({log.type})
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground">No water logs yet</div>
+              )}
             </div>
           </TrackingCard>
 

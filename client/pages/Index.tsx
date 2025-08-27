@@ -14,7 +14,7 @@ import { StepsWidget } from "@/components/StepsWidget";
 import { TodaysActivities } from "@/components/TodaysActivities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import {
   Flame,
@@ -26,7 +26,7 @@ import {
   Plus,
   PieChart as PieChartIcon,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 
 
 // =================================================================
@@ -282,7 +282,7 @@ export default function Index({ user, onLogout }: IndexProps) {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const percentage = data.value.toFixed(1);
-      const grams = data.name === "Protein" ? dailyStats.protein.current : data.name === "Carbs" ? dailyStats.carbs.current : dailyStats.fat.current;
+      const grams = data.name === "Protein" ? dailyStats.protein.current : data.name === "Carbs" ? dailyStats.carbs.current : dailyStats.fat.current.toFixed(1);
       return (
         <div className="glass-card p-3 border border-glass-border rounded-lg text-xs glow-accent animate-slide-in-up">
           <p className="font-medium text-sm flex items-center">
