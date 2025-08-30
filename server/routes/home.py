@@ -9,7 +9,9 @@ from enum import Enum
 from sqlalchemy.orm import Session
 from typing import Optional
 from server.auth import get_current_user
-from datetime import date
+from datetime import date,datetime,timedelta
+from typing import List
+import pytz
 
 
 
@@ -45,6 +47,20 @@ class DailyNutritionResponse(BaseModel):
     carbs: MacroGoal
     fat: MacroGoal
 
+class MealItem(BaseModel):
+    name:str
+    calories:str
+    protein:float
+    carbs:float
+    fat:float
+    quantity:float
+    unit:str
+
+class DailyMealsResponse(BaseModel):
+    breakfast:List[MealItem]
+    lunch:List[MealItem]
+    dinner:List[MealItem]
+    snacks:List[MealItem]
 
 @router.get("/api/v1/foods")
 async def search_foods(query:str=Query(...,description="Food name to search")):
@@ -102,6 +118,54 @@ def create_food_entry(entry: FoodEntryCreate, db: Session = Depends(get_db),curr
     db.commit()
     db.refresh(db_entry)
     return {"message": "Food entry saved", "id": db_entry.id}
+
+
+@router.get("/api/v1/food/day/{date}",response_model=DailyMealsResponse)
+def get_meals_for_day(
+    date:str,
+    db:Session=Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    ist = pytz.timezone("Asia/Kolkata")
+
+    start_date = ist.localize(datetime.fromisoformat(date))       # YYYY-MM-DD 00:00 IST
+    end_date = start_date + timedelta(days=1)
+
+    entries=db.query(FoodEntry).filter(
+        FoodEntry.user_id==current_user.user_id,
+        FoodEntry.timestamp>=start_date,
+        FoodEntry.timestamp<end_date
+    ).all()
+
+    meals = {
+        "breakfast": [],
+        "lunch": [],
+        "dinner": [],
+        "snacks": []
+    }
+
+    for entry in entries:
+        meal_dict={
+            "name":entry.food_name,
+            "calories":entry.calories,
+            "protein":entry.protein,
+            "carbs": entry.carbohydrates,
+            "fat": entry.fats,
+            "quantity": entry.quantity,
+            "unit": entry.unit
+        }
+        if entry.meal_type == MealType.breakfast:
+            meals["breakfast"].append(meal_dict)
+        if entry.meal_type == MealType.lunch:
+            meals["lunch"].append(meal_dict)
+        if entry.meal_type == MealType.snack:
+            meals["snacks"].append(meal_dict)
+        if entry.meal_type == MealType.dinner:
+            meals["dinner"].append(meal_dict)
+    
+    return meals
+        
+    
 
 @router.get("/api/v1/daily-nutrition", response_model=DailyNutritionResponse)
 def get_daily_nutrition(

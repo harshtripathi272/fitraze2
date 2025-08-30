@@ -121,7 +121,25 @@ export default function DailyLog() {
     goal:200,
     logs:[],
   });
-
+  const [mealData, setMealData] = useState<{
+      current: number;
+      goal: number;
+      logs:{
+        breakfast:any[];
+        lunch:any[];
+        dinner:any[];
+        snacks:any[];
+      };
+    }>({
+      current: 0,
+      goal: 4,
+      logs: {
+        breakfast:[],
+        lunch:[],
+        dinner:[],
+        snacks:[],
+      },
+    });
   // Animation refs for intersection observer
   const summaryRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
@@ -199,54 +217,41 @@ export default function DailyLog() {
     fetchWaterData();
   },[selectedDate]);
 
+  useEffect(()=>{
+    const fetchMealData=async()=>{
+      try{
+        const token=localStorage.getItem("access_token");
+        const formattedDate=selectedDate.toLocaleDateString("en-CA");
+        const res=await axios.get(`/api/v1/food/day/${formattedDate}`,{
+          headers:{
+            Authorization:`Bearer ${token}`,
+          },
+        });
+        
+        setMealData({
+          current:
+          (res.data.breakfast.length>0?1:0)+
+          (res.data.lunch.length>0?1:0)+
+          (res.data.dinner.length>0?1:0)+
+          (res.data.snacks.length>0?1:0),
+          goal:4,
+          logs:res.data
+          
+        });
+      }catch(err){
+        console.error("Error fetching meal data:",err);
+        setMealData({
+          current: 0, goal: 4, logs: { breakfast: [], lunch: [], dinner: [], snacks: [] } ,
+        });
+      }
+    };
+    fetchMealData();
+  },[selectedDate])
+
   // Mock data for different dates
   const getDayData = (date: Date) => {
     const dayOfWeek = date.getDay();
     const baseData = {
-      
-      meals: {
-        current: 3 + (dayOfWeek % 2),
-        goal: 4,
-        logs: {
-          breakfast: [
-            {
-              name: "Greek Yogurt with Berries",
-              calories: 180,
-              protein: 15,
-              carbs: 20,
-              fat: 6,
-            },
-            { name: "Oatmeal", calories: 150, protein: 5, carbs: 27, fat: 3 },
-          ],
-          lunch: [
-            {
-              name: "Grilled Chicken Salad",
-              calories: 350,
-              protein: 30,
-              carbs: 15,
-              fat: 18,
-            },
-          ],
-          dinner: [
-            {
-              name: "Salmon with Quinoa",
-              calories: 420,
-              protein: 35,
-              carbs: 45,
-              fat: 15,
-            },
-          ],
-          snacks: [
-            {
-              name: "Apple with Almond Butter",
-              calories: 190,
-              protein: 6,
-              carbs: 20,
-              fat: 12,
-            },
-          ],
-        },
-      },
       exercise: {
         current: 45 + dayOfWeek * 5,
         goal: 60,
@@ -638,13 +643,13 @@ export default function DailyLog() {
             id="meals"
             icon={Utensils}
             title="Meals"
-            current={currentData.meals.current}
-            goal={currentData.meals.goal}
+            current={mealData.current}
+            goal={mealData.goal}
             unit="meals"
             color="success"
           >
             <div className="space-y-4">
-              {Object.entries(currentData.meals.logs).map(
+              {Object.entries(mealData.logs).map(
                 ([mealType, foods]: [string, any[]]) => (
                   <div key={mealType}>
                     <h5 className="font-medium text-sm capitalize mb-2 text-accent">
