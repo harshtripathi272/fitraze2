@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { ProgressRing } from "@/components/ProgressRing";
 import { TrackingModal } from "@/components/TrackingModal";
 import { useScrollEffects } from "@/hooks/use-scroll-effects";
@@ -21,6 +22,7 @@ import {
   Clock,
   Flame,
   Zap,
+  Pencil,
 } from "lucide-react";
 import {
   format,
@@ -32,6 +34,76 @@ import {
 } from "date-fns";
 import { cn } from "@/lib/utils";
 import axios from "axios"
+
+
+function TrackingCardContent({ logs, fetchWaterData }: { logs: any[]; fetchWaterData: () => void }) {
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
+
+  const handleEditClick = (index: number, currentValue: number) => {
+    setEditIndex(index);
+    setEditValue(currentValue.toString());
+  };
+
+  const handleUpdate = async (logId:number) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.put(
+        `/api/v1/water/update/${logId}`,
+        { amount_ml: parseInt(editValue) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setEditIndex(null); // Exit edit mode
+      fetchWaterData(); // Refresh updated data
+    } catch (err) {
+      console.error("Error updating water log:", err);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <h4 className="font-medium text-sm">Today's Hydration Log</h4>
+      {logs.length > 0 ? (
+        logs.map((log, index) => (
+          <div key={index} className="flex justify-between items-center py-1">
+            <span className="text-sm text-muted-foreground">{log.time}</span>
+
+            {editIndex === index ? (
+              <input
+                type="number"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={()=>handleUpdate(log.id)}
+                onKeyDown={(e)=>{
+                  if(e.key=="Enter"){
+                    handleUpdate(log.id);
+                    console.log(log.id);
+                  }
+                }}
+                className="w-16 text-xs border rounded p-1 text-black"
+                autoFocus
+              />
+            ) : (
+              <Badge variant="outline" className="glass text-xs">
+                {log.amount}ml ({log.type})
+              </Badge>
+            )}
+
+            <button
+              onClick={() => handleEditClick(index, log.amount)}
+              className="ml-2 p-1 hover:bg-gray-100 rounded"
+            >
+              <Pencil className="w-4 h-4 text-gray-500" />
+            </button>
+          </div>
+        ))
+      ) : (
+        <div className="text-sm text-muted-foreground">No water logs yet</div>
+      )}
+    </div>
+  );
+}
 
 
 export default function DailyLog() {
@@ -99,8 +171,8 @@ export default function DailyLog() {
     fetchSleepData();
   },[selectedDate])
 
-  useEffect(()=>{
-    const fetchWaterData=async()=>{
+
+  const fetchWaterData=async()=>{
       try{
         const token=localStorage.getItem("access_token");
         const formattedDate=selectedDate.toLocaleDateString("en-CA");
@@ -122,6 +194,8 @@ export default function DailyLog() {
         setWaterData({current:0,goal:8,logs:[]});
       }
     };
+
+  useEffect(()=>{
     fetchWaterData();
   },[selectedDate]);
 
@@ -512,21 +586,7 @@ export default function DailyLog() {
             unit="glasses"
             color="primary"
           >
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Today's Hydration Log</h4>
-              {waterData.logs.length > 0 ? (
-                waterData.logs.map((log, index) => (
-                  <div key={index} className="flex justify-between items-center py-1">
-                    <span className="text-sm text-muted-foreground">{log.time}</span>
-                    <Badge variant="outline" className="glass text-xs">
-                      {log.amount}ml ({log.type})
-                    </Badge>
-                  </div>
-                ))
-              ) : (
-                <div className="text-sm text-muted-foreground">No water logs yet</div>
-              )}
-            </div>
+            <TrackingCardContent logs={waterData.logs} fetchWaterData={fetchWaterData}/>
           </TrackingCard>
 
           {/* Sleep Card */}

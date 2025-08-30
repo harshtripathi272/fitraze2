@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends,HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from pydantic import BaseModel
@@ -7,6 +7,8 @@ from typing import List
 from .. import models
 from ..database import get_db
 from ..auth import get_current_user
+import pytz
+from pytz import timezone
 
 # It's better to define the router without the /api/v1 prefix.
 # Add the prefix in your main.py when you include the router.
@@ -23,9 +25,13 @@ class TodaysWaterResponse(BaseModel):
     total_ml: int
 
 class WaterLogResponse(BaseModel):
+    id:int
     time:str
     amount:int
     type:str
+
+class UpdateWaterLogRequest(BaseModel):
+    amount_ml:int
 
 # --- API Endpoints ---
 
@@ -64,15 +70,44 @@ def get_todays_water(
 
 @router.get("/api/v1/water/day/{date}",response_model=List[WaterLogResponse])
 def get_water_logs_at_dates(date:str,db:Session=Depends(get_db),current_user:models.User=Depends(get_current_user)):
+
+    ist=timezone("Asia/Kolkata")
     logs=db.query(models.WaterLog).filter(
         models.WaterLog.user_id==current_user.user_id,
         func.date(models.WaterLog.timestamp)==date
     ).all()
     return [
         {
-            "time":log.timestamp.strftime("%H:%M"),
+            "id":log.id,
+            "time":log.timestamp.replace(tzinfo=pytz.utc).astimezone(ist).strftime("%H:%M"),
             "amount":log.amount_ml,
             "type":"glass"
         } 
         for log in logs
     ]
+
+@router.put("/api/v1/water/update/{log_id}")
+def update_latest_water_log(
+    log_id:int,
+    data: UpdateWaterLogRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    # Fetch the latest water log for the current user
+    log = (
+        db.query(models.WaterLog)
+        .filter(
+            models.WaterLog.id==log_id,
+            models.WaterLog.user_id == current_user.user_id
+            ).first()
+    )
+
+    if not log:
+        raise HTTPException(status_code=404, detail="No water log found")
+
+    # Update amount
+    log.amount_ml = data.amount_ml
+    db.commit()
+    db.refresh(log)
+
+    return {"message": "Log updated", "log": log}

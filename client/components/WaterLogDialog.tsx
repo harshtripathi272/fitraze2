@@ -30,6 +30,7 @@ import {
   Zap,
   Heart
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 
 // =================================================================
@@ -160,6 +161,8 @@ export function WaterLogDialog({
       setIsLoading(false);
     }
   };
+  const navigate = useNavigate();
+
 
   const incrementCustomAmount = () => {
     setCustomAmount((prev) => Math.min(prev + 50, 1500));
@@ -435,6 +438,18 @@ export function WaterLogDialog({
                 <Zap className="w-3 h-3 mr-1" />
                 7-day hydration streak! 🔥
               </Badge>
+            </div>
+            <div className="pt-4">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full"
+                
+                onClick={() => navigate("/daily-log")} // <-- Use React Router navigation
+              >
+                <Droplet className="w-5 h-5 mr-2" />
+                Update Water Log
+              </Button>
             </div>
 
             {/* Main Log Water Button */}
