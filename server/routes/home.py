@@ -49,7 +49,7 @@ class DailyNutritionResponse(BaseModel):
 
 class MealItem(BaseModel):
     name:str
-    calories:str
+    calories:float
     protein:float
     carbs:float
     fat:float
@@ -128,13 +128,18 @@ def get_meals_for_day(
 ):
     ist = pytz.timezone("Asia/Kolkata")
 
-    start_date = ist.localize(datetime.fromisoformat(date))       # YYYY-MM-DD 00:00 IST
-    end_date = start_date + timedelta(days=1)
+    start_date_ist = ist.localize(datetime.fromisoformat(date))       # YYYY-MM-DD 00:00 IST
+    end_date_ist = start_date_ist+ timedelta(days=1)
 
+    start_date_utc=start_date_ist.astimezone(pytz.UTC)
+    end_date_utc=end_date_ist.astimezone(pytz.UTC)
+
+    print("start_date_utc:", start_date_utc)
+    print("end_date_utc:", end_date_utc)
     entries=db.query(FoodEntry).filter(
         FoodEntry.user_id==current_user.user_id,
-        FoodEntry.timestamp>=start_date,
-        FoodEntry.timestamp<end_date
+        FoodEntry.timestamp>=start_date_utc,
+        FoodEntry.timestamp<end_date_utc
     ).all()
 
     meals = {
@@ -143,8 +148,12 @@ def get_meals_for_day(
         "dinner": [],
         "snacks": []
     }
-
+    #print(entries)
     for entry in entries:
+        # print(entry.food_name)
+        # print(entry.protein)
+        # print(entry.fats)
+        # print(entry.meal_type)
         meal_dict={
             "name":entry.food_name,
             "calories":entry.calories,
@@ -154,16 +163,16 @@ def get_meals_for_day(
             "quantity": entry.quantity,
             "unit": entry.unit
         }
-        if entry.meal_type == MealType.breakfast:
+        if entry.meal_type.value == "breakfast":
             meals["breakfast"].append(meal_dict)
-        if entry.meal_type == MealType.lunch:
+        if entry.meal_type.value == "lunch":
             meals["lunch"].append(meal_dict)
-        if entry.meal_type == MealType.snack:
+        if entry.meal_type.value == "snack":
             meals["snacks"].append(meal_dict)
-        if entry.meal_type == MealType.dinner:
+        if entry.meal_type.value == "dinner":
             meals["dinner"].append(meal_dict)
     
-    return meals
+    return DailyMealsResponse(**meals).dict()
         
     
 
@@ -183,7 +192,7 @@ def get_daily_nutrition(
     if not daily_log:
         # If no log found, return zero values but include goals
         return {
-            "calories": {"current": 0, "goal": 2200},  # TODO: fetch real goal logic
+            "calories": {"current": 0, "goal": 2200},
             "protein": {"current": 0, "goal": 140},
             "carbs": {"current": 0, "goal": 220},
             "fat": {"current": 0, "goal": 85}

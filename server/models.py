@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Date, JSON,DECIMAL, ForeignKey,DateTime,Boolean,Text, Float,Enum,Time
 from sqlalchemy.orm import relationship
 from server.database import Base
-from datetime import datetime
+from datetime import datetime,timezone
 from sqlalchemy import UniqueConstraint
 # from pgvector.sqlalchemy import Vector
 import enum
@@ -155,9 +155,9 @@ class FoodEntry(Base):
 
     meal_type = Column(Enum(MealType), nullable=False)    # breakfast/lunch/dinner/snack
 
-    timestamp = Column(DateTime, default=datetime.utcnow)  # When entry was added
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))  # When entry was added
 
-    def _repr_(self):
+    def __repr__(self):
         return f"<FoodEntry(name={self.food_name}, meal={self.meal_type}, calories={self.calories})>"
 # class MealLog(Base):
 #     _tablename_ = "meal_logs"
