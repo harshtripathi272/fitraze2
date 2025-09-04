@@ -119,6 +119,41 @@ def create_food_entry(entry: FoodEntryCreate, db: Session = Depends(get_db),curr
     db.refresh(db_entry)
     return {"message": "Food entry saved", "id": db_entry.id}
 
+@router.get("/api/v1/food/today")
+def get_today_food_entry(db:Session=Depends(get_db),current_user=Depends(get_current_user)):
+    today=date.today()
+    utc=pytz.utc
+    ist=pytz.timezone("Asia/Kolkata")
+    today_ist = datetime.now(ist).date()
+    start_ist = ist.localize(datetime.combine(today_ist, datetime.min.time()))
+    end_ist = ist.localize(datetime.combine(today_ist, datetime.max.time()))
+    start_utc = start_ist.astimezone(utc)
+    end_utc = end_ist.astimezone(utc)
+
+    entries=(
+        db.query(FoodEntry)
+        .filter(
+            FoodEntry.user_id==current_user.user_id,
+            FoodEntry.timestamp>=start_utc,
+            FoodEntry.timestamp<=end_utc,
+        ).all()
+    )
+    return[
+        {
+            "id":entry.id,
+            "food_name":entry.food_name,
+            "quantity":entry.quantity,
+            "unit":entry.unit,
+            "calories": entry.calories,
+            "protein": entry.protein,
+            "carbohydrates": entry.carbohydrates,
+            "fats": entry.fats,
+            "meal_type": entry.meal_type,
+            "timestamp":entry.timestamp.astimezone(ist).isoformat(),
+        } 
+        for entry in entries
+    ]
+
 
 @router.get("/api/v1/food/day/{date}",response_model=DailyMealsResponse)
 def get_meals_for_day(
@@ -204,3 +239,4 @@ def get_daily_nutrition(
         "carbs": {"current": daily_log.carbs_grams, "goal": 220},
         "fat": {"current": daily_log.fat_grams, "goal": 85}
     }
+

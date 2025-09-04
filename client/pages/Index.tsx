@@ -94,6 +94,9 @@ export default function Index({ user, onLogout }: IndexProps) {
   const [showWorkoutDialog, setShowWorkoutDialog] = useState(false);
   const [showWaterDialog, setShowWaterDialog] = useState(false);
   const [showSleepDialog, setShowSleepDialog] = useState(false);
+  const [loggedFoods, setLoggedFoods] = useState<
+    Array<{ food: Food; mealType: string; timestamp: Date }>
+  >([]);
 
   // ... (Your existing useEffects can remain)
   useEffect(() => {
@@ -204,12 +207,38 @@ export default function Index({ user, onLogout }: IndexProps) {
   };
 
   
+  const getTodaysFood=()=>{
+    return apiClient.get('/food/today');
+  }
+  useEffect(() => {
+  const fetchLoggedFoods = async () => {
+    try {
+      const response = await getTodaysFood();
+      setLoggedFoods(
+        response.data.map((item: any) => ({
+          food: {
+            name: item.food_name,
+            calories: item.calories,
+            protein: item.protein,
+            carbs: item.carbohydrates,
+            fat: item.fats,
+            unit: item.unit,
+            quantity: item.quantity,
+          },
+          mealType: item.meal_type,
+          timestamp: new Date(item.timestamp),
+        }))
+      );
+    } catch (error) {
+      console.error("Failed to fetch logged foods:", error);
+    }
+  };
 
+  fetchLoggedFoods();
+}, []);
 
   // ... (Your other state and macro data calculations can remain)
-  const [loggedFoods, setLoggedFoods] = useState<
-    Array<{ food: Food; mealType: string; timestamp: Date }>
-  >([]);
+  
   const [workoutStats, setWorkoutStats] = useState({
     completedToday: false,
     exercisesCompleted: 0,
