@@ -70,7 +70,9 @@ const StartupSplash: React.FC<StartupSplashProps> = ({onComplete}) => {
   return (
     <LinearGradient
       colors={theme.colors.gradientBackground}
-      style={styles.container}>
+      style={styles.container}
+      className="max-h-[80vh]"
+      >
       {/* Background particles */}
       <View style={styles.particlesContainer}>
         {Array.from({length: 20}).map((_, i) => (
@@ -164,6 +166,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    height:'80%',
   },
   particlesContainer: {
     position: 'absolute',

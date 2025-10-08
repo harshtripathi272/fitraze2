@@ -98,8 +98,8 @@ export function StreakCelebration({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-enhanced border-glass-border max-w-md mx-auto overflow-hidden modal-content">
+    <Dialog open={open} onOpenChange={onOpenChange} >
+      <DialogContent className="glass-enhanced border-glass-border max-w-2xl w-[95vw] h-[70vh] mx-auto overflow-hidden flex flex-col modal-content">
         <DialogHeader>
           <DialogTitle className="sr-only">Streak Celebration</DialogTitle>
         </DialogHeader>
@@ -118,60 +118,62 @@ export function StreakCelebration({
           <Button
             variant="ghost"
             size="sm"
-            className="absolute top-4 right-4 h-8 w-8 p-0 z-10"
+            className="absolute top-2 right-2 h-8 w-8 p-0 z-10"
             onClick={() => onOpenChange(false)}
           >
             <X className="w-4 h-4" />
           </Button>
         )}
 
-        <div className="space-y-6 p-2">
+        <div className="flex-1 flex flex-col justify-center space-y-3 px-4 py-2">
           {/* Main Celebration */}
-          <div className="text-center space-y-4">
-            {/* Avatar Animation */}
-            <div className="relative mx-auto w-24 h-24 mb-4">
-              <div
-                className={cn(
-                  "w-full h-full rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-4xl font-bold text-white shadow-lg",
-                  avatarAnimation === "celebrate" && "animate-bounce-soft",
-                )}
-              >
-                🎉
+          <div className="flex items-center justify-between gap-6">
+            {/* Left: Avatar and Streak Number */}
+            <div className="flex items-center gap-4">
+              {/* Avatar Animation */}
+              <div className="relative w-16 h-16 flex-shrink-0">
+                <div
+                  className={cn(
+                    "w-full h-full rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-2xl font-bold text-white shadow-lg",
+                    avatarAnimation === "celebrate" && "animate-bounce-soft",
+                  )}
+                >
+                  🎉
+                </div>
+
+                {/* High-five animation effect */}
+                <div
+                  className={cn(
+                    "absolute -top-1 -right-1 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center transform transition-all duration-500 text-xs",
+                    avatarAnimation === "celebrate"
+                      ? "scale-110 animate-pulse"
+                      : "scale-0",
+                  )}
+                >
+                  ✋
+                </div>
               </div>
 
-              {/* High-five animation effect */}
-              <div
-                className={cn(
-                  "absolute -top-2 -right-2 w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center transform transition-all duration-500",
-                  avatarAnimation === "celebrate"
-                    ? "scale-110 animate-pulse"
-                    : "scale-0",
-                )}
-              >
-                ✋
+              {/* Streak Number */}
+              <div className="text-left">
+                <div className="text-4xl font-bold text-primary animate-glow-pulse">
+                  {streakData.currentStreak}
+                </div>
+                <div className="text-base font-semibold flex items-center gap-1.5">
+                  <Flame className="w-4 h-4 text-orange-400 animate-glow" />
+                  <span>Day Streak!</span>
+                </div>
               </div>
             </div>
 
-            {/* Streak Number */}
-            <div className="space-y-2">
-              <div className="text-6xl font-bold text-primary animate-glow-pulse">
-                {streakData.currentStreak}
-              </div>
-              <div className="text-xl font-semibold flex items-center justify-center space-x-2">
-                <Flame className="w-6 h-6 text-orange-400 animate-glow" />
-                <span>Day Streak!</span>
-                <Flame className="w-6 h-6 text-orange-400 animate-glow" />
-              </div>
-              <p className="text-lg font-medium text-accent">
-                {getStreakMessage()}
-              </p>
-            </div>
-
-            {/* Motivational Quote */}
-            <Card className="glass-card border-glass-border glow-accent">
-              <CardContent className="p-4 text-center">
-                <Sparkles className="w-5 h-5 text-yellow-400 mx-auto mb-2 animate-pulse" />
-                <p className="text-sm font-medium text-shimmer">
+            {/* Right: Motivational Quote */}
+            <Card className="glass-card border-glass-border glow-accent flex-1">
+              <CardContent className="p-3">
+                <Sparkles className="w-4 h-4 text-yellow-400 mb-1 animate-pulse" />
+                <p className="text-sm font-medium text-accent">
+                  {getStreakMessage()}
+                </p>
+                <p className="text-xs text-shimmer mt-1">
                   {getMotivationalQuote()}
                 </p>
               </CardContent>
@@ -179,56 +181,56 @@ export function StreakCelebration({
           </div>
 
           {/* Streak Stats */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-center">
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-center">
               This Streak Journey
             </h3>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-4 gap-2">
               <Card className="glass-card border-glass-border hover:glow-accent transition-all duration-300">
-                <CardContent className="p-3 text-center">
-                  <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-2 animate-glow" />
-                  <div className="text-lg font-bold">
+                <CardContent className="p-2 text-center">
+                  <Trophy className="w-5 h-5 text-yellow-400 mx-auto mb-0.5 animate-glow" />
+                  <div className="text-sm font-bold">
                     {streakData.longestStreak}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Longest Streak
+                  <div className="text-[9px] text-muted-foreground leading-tight">
+                    Longest
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="glass-card border-glass-border hover:glow-accent transition-all duration-300">
-                <CardContent className="p-3 text-center">
-                  <Zap className="w-6 h-6 text-orange-400 mx-auto mb-2 animate-glow-pulse" />
-                  <div className="text-lg font-bold">
-                    {streakData.caloriesBurned.toLocaleString()}
+                <CardContent className="p-2 text-center">
+                  <Zap className="w-5 h-5 text-orange-400 mx-auto mb-0.5 animate-glow-pulse" />
+                  <div className="text-sm font-bold">
+                    {(streakData.caloriesBurned / 1000).toFixed(1)}k
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Calories Burned
+                  <div className="text-[9px] text-muted-foreground leading-tight">
+                    Calories
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="glass-card border-glass-border hover:glow-accent transition-all duration-300">
-                <CardContent className="p-3 text-center">
-                  <Target className="w-6 h-6 text-green-400 mx-auto mb-2 animate-glow" />
-                  <div className="text-lg font-bold">
+                <CardContent className="p-2 text-center">
+                  <Target className="w-5 h-5 text-green-400 mx-auto mb-0.5 animate-glow" />
+                  <div className="text-sm font-bold">
                     {streakData.mealsLogged}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Meals Logged
+                  <div className="text-[9px] text-muted-foreground leading-tight">
+                    Meals
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="glass-card border-glass-border hover:glow-accent transition-all duration-300">
-                <CardContent className="p-3 text-center">
-                  <Calendar className="w-6 h-6 text-blue-400 mx-auto mb-2 animate-glow-pulse" />
-                  <div className="text-lg font-bold">
+                <CardContent className="p-2 text-center">
+                  <Calendar className="w-5 h-5 text-blue-400 mx-auto mb-0.5 animate-glow-pulse" />
+                  <div className="text-sm font-bold">
                     {streakData.workoutsCompleted}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Workouts Done
+                  <div className="text-[9px] text-muted-foreground leading-tight">
+                    Workouts
                   </div>
                 </CardContent>
               </Card>
@@ -236,15 +238,15 @@ export function StreakCelebration({
           </div>
 
           {/* Achievement Badges */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-center text-muted-foreground">
+          <div className="space-y-2">
+            <h4 className="text-xs font-medium text-center text-muted-foreground">
               Recent Achievements
             </h4>
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-1.5 justify-center">
               {streakData.currentStreak >= 7 && (
                 <Badge
                   variant="outline"
-                  className="glass text-xs animate-scale-in"
+                  className="glass text-[10px] px-2 py-0.5 animate-scale-in"
                   style={{ animationDelay: "200ms" }}
                 >
                   🔥 Week Warrior
@@ -253,7 +255,7 @@ export function StreakCelebration({
               {streakData.currentStreak >= 14 && (
                 <Badge
                   variant="outline"
-                  className="glass text-xs animate-scale-in"
+                  className="glass text-[10px] px-2 py-0.5 animate-scale-in"
                   style={{ animationDelay: "400ms" }}
                 >
                   ⚡ Consistency King
@@ -262,7 +264,7 @@ export function StreakCelebration({
               {streakData.mealsLogged >= 50 && (
                 <Badge
                   variant="outline"
-                  className="glass text-xs animate-scale-in"
+                  className="glass text-[10px] px-2 py-0.5 animate-scale-in"
                   style={{ animationDelay: "600ms" }}
                 >
                   🍽️ Nutrition Master
@@ -271,7 +273,7 @@ export function StreakCelebration({
               {streakData.workoutsCompleted >= 10 && (
                 <Badge
                   variant="outline"
-                  className="glass text-xs animate-scale-in"
+                  className="glass text-[10px] px-2 py-0.5 animate-scale-in"
                   style={{ animationDelay: "800ms" }}
                 >
                   💪 Fitness Champion
@@ -284,7 +286,7 @@ export function StreakCelebration({
           {!isLaunchCelebration && (
             <Button
               onClick={() => onOpenChange(false)}
-              className="w-full glow-accent hover:scale-105 transition-all duration-300 btn-glow-effect"
+              className="w-full glow-accent hover:scale-105 transition-all duration-300 btn-glow-effect py-2"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Keep the Streak Going!
@@ -294,7 +296,7 @@ export function StreakCelebration({
           {/* Auto-close indicator for launch celebration */}
           {isLaunchCelebration && (
             <div className="text-center">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] text-muted-foreground">
                 Tap anywhere to dismiss
               </p>
             </div>
