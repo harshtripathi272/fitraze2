@@ -4,57 +4,60 @@
 
 @layer base {
   /**
-   * FitRaze Dark Purple Theme
-   * Tailwind CSS theme with glassmorphism and glow effects
-   * HSL color values for dark purple theme with neon accents
-  */
+   * FitRaze Dynamic Theme System
+   * Support for light/dark modes with customizable color palettes
+   * Available palettes: cyan (default), purple, green, orange, pink, blue
+   */
+  
+  /* ===== LIGHT THEME - DEFAULT PALETTE (CYAN) ===== */
   :root {
-    --background: 200 25% 6%;
-    --foreground: 180 5% 95%;
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
-    --card: 195 20% 8%;
-    --card-foreground: 180 5% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 200 25% 7%;
-    --popover-foreground: 180 5% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 185 100% 60%;
-    --primary-foreground: 200 25% 6%;
+    --primary: 185 100% 42%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 195 30% 15%;
-    --secondary-foreground: 180 5% 95%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 195 25% 12%;
-    --muted-foreground: 180 5% 70%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 170 100% 55%;
-    --accent-foreground: 200 25% 6%;
+    --accent: 170 100% 42%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 180 5% 95%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 195 30% 20%;
-    --input: 195 25% 15%;
-    --ring: 185 100% 60%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 185 100% 42%;
 
     --radius: 1rem;
 
-    --glass-bg: 195 30% 10%;
-    --glass-border: 185 60% 45%;
-    --glow-primary: 185 100% 60%;
-    --glow-secondary: 170 100% 55%;
-    --glow-tertiary: 160 100% 50%;
+    --glass-bg: 210 40% 98%;
+    --glass-border: 185 60% 50%;
+    --glow-primary: 185 100% 42%;
+    --glow-secondary: 170 100% 42%;
+    --glow-tertiary: 160 100% 42%;
 
-    --sidebar-background: 200 25% 6%;
-    --sidebar-foreground: 180 5% 95%;
-    --sidebar-primary: 185 100% 60%;
-    --sidebar-primary-foreground: 200 25% 6%;
-    --sidebar-accent: 195 30% 15%;
-    --sidebar-accent-foreground: 180 5% 95%;
-    --sidebar-border: 195 30% 20%;
-    --sidebar-ring: 185 100% 60%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 185 100% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 185 100% 42%;
   }
 
+  /* ===== DARK THEME - DEFAULT PALETTE (CYAN) ===== */
   .dark {
     --background: 200 30% 4%;
     --foreground: 180 5% 95%;
@@ -77,7 +80,7 @@
     --accent: 170 100% 60%;
     --accent-foreground: 200 30% 4%;
 
-    --destructive: 0 62.8% 50.6%;
+    --destructive: 0 63% 51%;
     --destructive-foreground: 180 5% 95%;
 
     --border: 195 35% 15%;
@@ -99,11 +102,138 @@
     --sidebar-border: 195 35% 15%;
     --sidebar-ring: 185 100% 65%;
   }
+
+  /* ===== PURPLE PALETTE - LIGHT ===== */
+  :root[data-theme="purple"] {
+    --primary: 270 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 280 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --glow-primary: 270 100% 45%;
+    --glow-secondary: 280 100% 50%;
+    --glow-tertiary: 290 100% 55%;
+    --sidebar-primary: 270 100% 45%;
+    --ring: 270 100% 45%;
+  }
+
+  .dark[data-theme="purple"] {
+    --primary: 270 100% 70%;
+    --primary-foreground: 200 30% 4%;
+    --accent: 280 100% 65%;
+    --accent-foreground: 200 30% 4%;
+    --glow-primary: 270 100% 70%;
+    --glow-secondary: 280 100% 65%;
+    --glow-tertiary: 290 100% 60%;
+    --sidebar-primary: 270 100% 70%;
+    --ring: 270 100% 70%;
+  }
+
+  /* ===== GREEN PALETTE - LIGHT ===== */
+  :root[data-theme="green"] {
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 152 76% 40%;
+    --accent-foreground: 0 0% 100%;
+    --glow-primary: 142 76% 36%;
+    --glow-secondary: 152 76% 40%;
+    --glow-tertiary: 162 76% 44%;
+    --sidebar-primary: 142 76% 36%;
+    --ring: 142 76% 36%;
+  }
+
+  .dark[data-theme="green"] {
+    --primary: 142 76% 60%;
+    --primary-foreground: 200 30% 4%;
+    --accent: 152 76% 55%;
+    --accent-foreground: 200 30% 4%;
+    --glow-primary: 142 76% 60%;
+    --glow-secondary: 152 76% 55%;
+    --glow-tertiary: 162 76% 50%;
+    --sidebar-primary: 142 76% 60%;
+    --ring: 142 76% 60%;
+  }
+
+  /* ===== ORANGE PALETTE - LIGHT ===== */
+  :root[data-theme="orange"] {
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 35 95% 50%;
+    --accent-foreground: 0 0% 100%;
+    --glow-primary: 25 95% 53%;
+    --glow-secondary: 35 95% 50%;
+    --glow-tertiary: 45 95% 47%;
+    --sidebar-primary: 25 95% 53%;
+    --ring: 25 95% 53%;
+  }
+
+  .dark[data-theme="orange"] {
+    --primary: 25 95% 65%;
+    --primary-foreground: 200 30% 4%;
+    --accent: 35 95% 60%;
+    --accent-foreground: 200 30% 4%;
+    --glow-primary: 25 95% 65%;
+    --glow-secondary: 35 95% 60%;
+    --glow-tertiary: 45 95% 55%;
+    --sidebar-primary: 25 95% 65%;
+    --ring: 25 95% 65%;
+  }
+
+  /* ===== PINK PALETTE - LIGHT ===== */
+  :root[data-theme="pink"] {
+    --primary: 330 81% 60%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 340 82% 65%;
+    --accent-foreground: 0 0% 100%;
+    --glow-primary: 330 81% 60%;
+    --glow-secondary: 340 82% 65%;
+    --glow-tertiary: 350 83% 70%;
+    --sidebar-primary: 330 81% 60%;
+    --ring: 330 81% 60%;
+  }
+
+  .dark[data-theme="pink"] {
+    --primary: 330 81% 70%;
+    --primary-foreground: 200 30% 4%;
+    --accent: 340 82% 65%;
+    --accent-foreground: 200 30% 4%;
+    --glow-primary: 330 81% 70%;
+    --glow-secondary: 340 82% 65%;
+    --glow-tertiary: 350 83% 60%;
+    --sidebar-primary: 330 81% 70%;
+    --ring: 330 81% 70%;
+  }
+
+  /* ===== BLUE PALETTE - LIGHT ===== */
+  :root[data-theme="blue"] {
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 211 83% 58%;
+    --accent-foreground: 0 0% 100%;
+    --glow-primary: 221 83% 53%;
+    --glow-secondary: 211 83% 58%;
+    --glow-tertiary: 201 83% 63%;
+    --sidebar-primary: 221 83% 53%;
+    --ring: 221 83% 53%;
+  }
+
+  .dark[data-theme="blue"] {
+    --primary: 221 83% 68%;
+    --primary-foreground: 200 30% 4%;
+    --accent: 211 83% 63%;
+    --accent-foreground: 200 30% 4%;
+    --glow-primary: 221 83% 68%;
+    --glow-secondary: 211 83% 63%;
+    --glow-tertiary: 201 83% 58%;
+    --sidebar-primary: 221 83% 68%;
+    --ring: 221 83% 68%;
+  }
 }
 
 @layer base {
   * {
     @apply border-border;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    background-color: var(--background);
   }
 
   body {
@@ -111,12 +241,21 @@
     background: radial-gradient(
       ellipse at top,
       hsl(var(--background)) 0%,
-      hsl(200 35% 3%) 100%
+      hsl(var(--background) / 0.8) 100%
     );
     min-height: 100vh;
-    min-height: 100dvh; /* Dynamic viewport height for mobile */
-    touch-action: manipulation; /* Improves touch responsiveness */
-    -webkit-text-size-adjust: none; /* Prevents zoom on input focus */
+    min-height: 100dvh;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: none;
+    transition: var(--background) 0.3s ease;
+  }
+
+  .dark body {
+    background: radial-gradient(
+      ellipse at top,
+      hsl(var(--background)) 0%,
+      hsl(200 35% 3%) 100%
+    );
   }
 
   .glass {
@@ -126,11 +265,21 @@
     border-radius: var(--radius);
   }
 
+  .dark .glass {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
   .glass-card {
-    background: hsla(var(--glass-bg), 0.3);
+    background: hsla(var(--glass-bg), 0.6);
     backdrop-filter: blur(20px);
-    border: 1px solid hsla(var(--glass-border), 0.3);
+    border: 1px solid hsla(var(--glass-border), 0.2);
     border-radius: var(--radius);
+  }
+
+  .dark .glass-card {
+    background: hsla(var(--glass-bg), 0.3);
+    border: 1px solid hsla(var(--glass-border), 0.3);
   }
 
   .glow {
@@ -200,9 +349,7 @@
   /* Mobile-specific styles */
   @media (max-width: 640px) {
     .glass-card {
-      backdrop-filter: blur(
-        15px
-      ); /* Slightly less blur on mobile for performance */
+      backdrop-filter: blur(15px);
     }
   }
 
@@ -224,6 +371,7 @@
   html {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    background-color: hsl(var(--background));
   }
 
   /* Custom animations for Daily Log */
@@ -446,7 +594,7 @@
 
   .btn-glow-effect:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 191, 255, 0.3);
+    box-shadow: 0 8px 25px hsla(var(--glow-primary), 0.3);
   }
 
   /* Progress bar animations */

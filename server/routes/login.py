@@ -6,7 +6,7 @@ from datetime import datetime,timedelta
 from server.database import get_db,Base,engine
 from server.models import User
 from dotenv import load_dotenv
-import jwt
+import jose.jwt as jwt
 from passlib.context import CryptContext
 import os
 from server.pydatnes import schemas

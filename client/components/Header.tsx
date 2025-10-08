@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { AnimatedLogo } from "./AnimatedLogo";
 import { EditStatsModal } from "./EditStatsModal";
 import { StreakCelebration } from "./StreakCelebration";
+import { ThemeToggler } from "./ThemeToggler";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -362,6 +363,9 @@ export function Header({
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* Theme Toggler */}
+            <ThemeToggler />
+            
             {/* Scan Button */}
             {onScanMeal && (
               <Button

@@ -5,9 +5,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggler } from "@/components/ThemeToggler";
 import {
   ArrowLeft,
-  Settings,
+  Settings as SettingsIcon,
   Bell,
   Moon,
   Sun,
@@ -124,24 +125,29 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4">
       {/* Header */}
-      <div className="flex items-center space-x-4 mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/profile")}
-          className="h-10 w-10 p-0 glass-card"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold flex items-center">
-            <Settings className="w-6 h-6 mr-2 text-primary" />
-            Settings & Preferences
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Customize your FitRaze experience
-          </p>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/profile")}
+            className="h-10 w-10 p-0 glass-card"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold flex items-center">
+              <SettingsIcon className="w-6 h-6 mr-2 text-primary" />
+              Settings & Preferences
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Customize your FitRaze experience
+            </p>
+          </div>
         </div>
+        
+        {/* Theme Toggler */}
+        <ThemeToggler />
       </div>
 
       {/* Settings Groups */}

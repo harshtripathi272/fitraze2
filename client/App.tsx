@@ -23,6 +23,7 @@ import DailyLog from "./pages/DailyLog";
 import Chat from "./pages/Chat";
 import QuickAddFood from "./pages/QuickAddFood";
 import NotFound from "./pages/NotFound";
+import { ThemeProvider } from "@/lib/theme-context";
 
 const queryClient = new QueryClient();
 
@@ -107,23 +108,27 @@ const App = () => {
 
   if (showSplash && isFirstLoad) {
     return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <StartupSplash onComplete={handleSplashComplete} />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <StartupSplash onComplete={handleSplashComplete} />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Login onLogin={handleLogin} />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Login onLogin={handleLogin} />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     );
   }
 
@@ -131,53 +136,54 @@ const App = () => {
     // FIX: The 'token' variable is now defined here before being used.
     const token = localStorage.getItem("access_token");
     return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <HealthQuestionnaire
-            onComplete={handleQuestionnaireComplete}
-            userName={user.firstName}
-            userId={user.userId} // <-- Add this prop
-            token={token!}      // <-- Add this prop
-          />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <HealthQuestionnaire
+              onComplete={handleQuestionnaireComplete}
+              userName={user.firstName}
+              userId={user.userId} // <-- Add this prop
+              token={token!}      // <-- Add this prop
+            />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     );
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <div className="min-h-screen bg-background text-foreground pb-14 sm:pb-16">
-          <Routes>
-            <Route
-              path="/"
-              element={<Index user={user} onLogout={handleLogout} />}
-            />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/meal-planning" element={<MealPlanning />} />
-            <Route path="/account-info" element={<AccountInfo />} />
-            <Route path="/progress-tracking" element={<ProgressTracking />} />
-            <Route path="/fitness-goals" element={<FitnessGoals />} />
-            <Route path="/health-metrics" element={<HealthMetrics />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/daily-log" element={<DailyLog />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/quick-add-food" element={<QuickAddFood />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <MobileNavigation />
-        </div>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <div className="min-h-screen bg-background text-foreground pb-14 sm:pb-16">
+            <Routes>
+              <Route
+                path="/"
+                element={<Index user={user} onLogout={handleLogout} />}
+              />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/meal-planning" element={<MealPlanning />} />
+              <Route path="/account-info" element={<AccountInfo />} />
+              <Route path="/progress-tracking" element={<ProgressTracking />} />
+              <Route path="/fitness-goals" element={<FitnessGoals />} />
+              <Route path="/health-metrics" element={<HealthMetrics />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/daily-log" element={<DailyLog />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/quick-add-food" element={<QuickAddFood />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <MobileNavigation />
+          </div>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 };
-
-// Wrap App in BrowserRouter to provide routing context
-
 
 export default App;
