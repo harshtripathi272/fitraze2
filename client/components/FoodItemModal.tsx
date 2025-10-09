@@ -166,6 +166,9 @@ export function FoodItemModal({ open, onOpenChange, food, onFoodAdded, mealType 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-enhanced border-glass-border max-w-md mx-auto max-h-[90vh] overflow-hidden modal-content">
+        <DialogHeader>
+          <DialogTitle className="sr-only">Food Item Details</DialogTitle>
+        </DialogHeader>
         <Button
           variant="ghost"
           size="sm"

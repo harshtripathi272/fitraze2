@@ -76,10 +76,10 @@ export function TodaysActivities({ loggedFoods, workoutStats, workoutData }: Tod
 
   const getMealTotals = (meals: LoggedFood[]) => {
     return meals.reduce((totals, entry) => ({
-      calories: totals.calories + entry.food.calories,
-      protein: totals.protein + entry.food.protein,
-      carbs: totals.carbs + entry.food.carbs,
-      fat: totals.fat + entry.food.fat
+      calories: Math.round((totals.calories + entry.food.calories) * 100) / 100,
+      protein: Math.round((totals.protein + entry.food.protein) * 100) / 100,
+      carbs: Math.round((totals.carbs + entry.food.carbs) * 100) / 100,
+      fat: Math.round((totals.fat + entry.food.fat) * 100) / 100
     }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
   };
 

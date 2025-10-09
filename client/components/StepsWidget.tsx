@@ -40,7 +40,6 @@ export function StepsWidget({ className }: StepsWidgetProps) {
       const fetchData = async () => {
         try {
           const res = await axios.get(`http://localhost:8000/fit/summary?access_token=${token}`);
-          console.log("RAW RESPONSE", res.status,res.data)
           setStepData(res.data);
           setIsConnected(true);
         } catch (err) {

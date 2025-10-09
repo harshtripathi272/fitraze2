@@ -498,41 +498,50 @@ export default function DailyLog() {
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              {getCalendarDays().map((day, index) => (
-                <Button
-                  key={`${day.date.getFullYear()}-${day.date.getMonth()}-${day.date.getDate()}`}
-                  variant={day.isSelected ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedDate(day.date)}
-                  className={cn(
-                    "min-w-[60px] flex-col space-y-1 h-16 transition-all duration-300",
-                    day.isSelected
-                      ? "glow-accent scale-110 shadow-lg"
-                      : "glass-card hover:scale-105",
-                    day.isToday &&
-                      !day.isSelected &&
-                      "border-primary text-primary",
-                    "animate-slide-in-up",
-                  )}
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <span className="text-xs font-medium">{day.dayName}</span>
-                  <span className="text-lg font-bold">{day.dayNumber}</span>
-                  {day.isToday && (
-                    <div className="w-1 h-1 bg-accent rounded-full animate-pulse" />
-                  )}
-                </Button>
-              ))}
+              {getCalendarDays().map((day, index) => {
+                // Calculate distance from selected date
+                const allDays = getCalendarDays();
+                const selectedIndex = allDays.findIndex((d) => d.isSelected);
+                const distance = Math.abs(index - selectedIndex);
+                const blurAmount = distance * 0.8; // Increase blur by 2px for each step away
+                const opacityValue = Math.max(0.9, 1 - distance * 0.05); // Decrease opacity
+                const scaleValue = Math.max(0.85, 1 - distance * 0.65); // Decrease scale
+
+                return (
+                  <Button
+                    key={`${day.date.getFullYear()}-${day.date.getMonth()}-${day.date.getDate()}`}
+                    variant={day.isSelected ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedDate(day.date)}
+                    className={cn(
+                      "min-w-[60px] flex-col space-y-1 h-16 transition-all duration-300 ",
+                      day.isSelected
+                        ? "glow-accent scale-110 shadow-lg z-10 brightness-110"
+                        : "glass-card hover:scale-105",
+                      day.isToday &&
+                        !day.isSelected &&
+                        "border-primary text-primary",
+                      "animate-slide-in-up",
+                    )}
+                    style={{
+                      animationDelay: `${index * 50}ms`,
+                      filter: day.isSelected ? "blur(0px)" : `blur(${blurAmount}px)`,
+                      opacity: day.isSelected ? 1 : opacityValue,
+                      transform: day.isSelected 
+                        ? "scale(1.1)" 
+                        : `scale(${scaleValue})`,
+                    }}
+                  >
+                    <span className="text-xs font-medium">{day.dayName}</span>
+                    <span className="text-lg font-bold">{day.dayNumber}</span>
+                    {day.isToday && (
+                      <div className="w-1  bg-accent rounded-full animate-pulse" />
+                    )}
+                  </Button>
+                );
+              })}
             </div>
 
-            {/* Swipe indicator */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-xs text-muted-foreground">
-              <div className="flex items-center space-x-1">
-                <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse"></div>
-                <span>Swipe to navigate</span>
-                <div className="w-1 h-1 bg-muted-foreground rounded-full animate-pulse"></div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -741,15 +750,15 @@ export default function DailyLog() {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 grid sm:grid-cols-1 lg:grid-cols-2">
             {aiInsights.map((insight, index) => (
               <div
                 key={index}
                 className={cn(
-                  "p-3 rounded-lg glass-card border border-glass-border text-sm transition-all duration-500 hover:glow-soft hover:scale-[1.01] cursor-default",
+                  "p-3 rounded-lg glass-card border border-glass-border text-sm lg:text-lg transition-all duration-500 hover:glow-soft hover:scale-[1.01] cursor-default ",
                   showAISummary && "animate-slide-in-up",
                 )}
-                style={{ animationDelay: `${index * 200}ms` }}
+                style={{ animationDelay: `${index * 600}ms` }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform =
                     "translateX(4px) scale(1.01)";

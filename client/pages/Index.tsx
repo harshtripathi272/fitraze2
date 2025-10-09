@@ -26,8 +26,7 @@ import {
   Plus,
   PieChart as PieChartIcon,
 } from "lucide-react";
-
-
+import * as React from "react";
 
 // =================================================================
 // --- API LOGIC (Required for this page to function) ---
@@ -190,7 +189,7 @@ export default function Index({ user, onLogout }: IndexProps) {
   }, []);
 
 
-  
+
   const [loading, setLoading] = useState(true);
 
   // This function will be used to fetch and refresh water data
@@ -206,39 +205,39 @@ export default function Index({ user, onLogout }: IndexProps) {
     }
   };
 
-  
-  const getTodaysFood=()=>{
+
+  const getTodaysFood = () => {
     return apiClient.get('/food/today');
   }
   useEffect(() => {
-  const fetchLoggedFoods = async () => {
-    try {
-      const response = await getTodaysFood();
-      setLoggedFoods(
-        response.data.map((item: any) => ({
-          food: {
-            name: item.food_name,
-            calories: item.calories,
-            protein: item.protein,
-            carbs: item.carbohydrates,
-            fat: item.fats,
-            unit: item.unit,
-            quantity: item.quantity,
-          },
-          mealType: item.meal_type,
-          timestamp: new Date(item.timestamp),
-        }))
-      );
-    } catch (error) {
-      console.error("Failed to fetch logged foods:", error);
-    }
-  };
+    const fetchLoggedFoods = async () => {
+      try {
+        const response = await getTodaysFood();
+        setLoggedFoods(
+          response.data.map((item: any) => ({
+            food: {
+              name: item.food_name,
+              calories: item.calories,
+              protein: item.protein,
+              carbs: item.carbohydrates,
+              fat: item.fats,
+              unit: item.unit,
+              quantity: item.quantity,
+            },
+            mealType: item.meal_type,
+            timestamp: new Date(item.timestamp),
+          }))
+        );
+      } catch (error) {
+        console.error("Failed to fetch logged foods:", error);
+      }
+    };
 
-  fetchLoggedFoods();
-}, []);
+    fetchLoggedFoods();
+  }, []);
 
   // ... (Your other state and macro data calculations can remain)
-  
+
   const [workoutStats, setWorkoutStats] = useState({
     completedToday: false,
     exercisesCompleted: 0,
@@ -248,31 +247,31 @@ export default function Index({ user, onLogout }: IndexProps) {
   const [showLaunchCelebration, setShowLaunchCelebration] = useState(false);
 
   const macroData = [
-  {
-    name: "Protein",
-    value: dailyStats.calories.current > 0
-      ? Math.round(((dailyStats.protein.current * 4) / dailyStats.calories.current) * 100)
-      : 0,
-    calories: dailyStats.protein.current * 4,
-    color: "#00BFFF"
-  },
-  {
-    name: "Carbs",
-    value: dailyStats.calories.current > 0
-      ? Math.round(((dailyStats.carbs.current * 4) / dailyStats.calories.current) * 100)
-      : 0,
-    calories: dailyStats.carbs.current * 4,
-    color: "#FFC107"
-  },
-  {
-    name: "Fat",
-    value: dailyStats.calories.current > 0
-      ? Math.round(((dailyStats.fat.current * 9) / dailyStats.calories.current) * 100)
-      : 0,
-    calories: dailyStats.fat.current * 9,
-    color: "#FF6B6B"
-  }
-];
+    {
+      name: "Protein",
+      value: dailyStats.calories.current > 0
+        ? Math.round(((dailyStats.protein.current * 4) / dailyStats.calories.current) * 100)
+        : 0,
+      calories: dailyStats.protein.current * 4,
+      color: "#00BFFF"
+    },
+    {
+      name: "Carbs",
+      value: dailyStats.calories.current > 0
+        ? Math.round(((dailyStats.carbs.current * 4) / dailyStats.calories.current) * 100)
+        : 0,
+      calories: dailyStats.carbs.current * 4,
+      color: "#FFC107"
+    },
+    {
+      name: "Fat",
+      value: dailyStats.calories.current > 0
+        ? Math.round(((dailyStats.fat.current * 9) / dailyStats.calories.current) * 100)
+        : 0,
+      calories: dailyStats.fat.current * 9,
+      color: "#FF6B6B"
+    }
+  ];
 
   // ... (handleFoodAdded and handleWorkoutCompleted can remain)
   const handleFoodAdded = (food: Food, mealType: string) => {
@@ -289,7 +288,7 @@ export default function Index({ user, onLogout }: IndexProps) {
   const handleWorkoutCompleted = (workout: any) => {
     setWorkoutStats({ completedToday: true, exercisesCompleted: workout.completedCount });
   };
-  
+
   // DELETED: The old handleWaterAdded function is no longer needed here.
 
   // ... (The rest of your functions and JSX can remain the same)
@@ -326,8 +325,36 @@ export default function Index({ user, onLogout }: IndexProps) {
     return null;
   };
 
+  
+
   if (loading) {
-    return <div>Loading dashboard...</div>;
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-background via-background/95 to-primary/5 z-50">
+        <div className="text-center space-y-6 px-4">
+          {/* Main loading text with gradient and animation */}
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            Loading dashboard
+            <span className="inline-flex ml-1">
+              <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+            </span>
+          </h1>
+          
+          {/* Subtitle */}
+          <p className="text-muted-foreground text-lg sm:text-xl animate-pulse" style={{ animationDelay: '200ms' }}>
+            Preparing your fitness journey
+          </p>
+          
+          {/* Animated loading dots */}
+          <div className="flex justify-center space-x-2 pt-4">
+            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+            <div className="w-3 h-3 bg-accent rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -493,9 +520,9 @@ export default function Index({ user, onLogout }: IndexProps) {
       <FoodLogDialog open={showFoodDialog} onOpenChange={setShowFoodDialog} onFoodAdded={handleFoodAdded} onScanMeal={handleScanMeal} onNavigateToCustomFood={() => navigate("/quick-add-food")} />
       <WorkoutLogDialog open={showWorkoutDialog} onOpenChange={setShowWorkoutDialog} onWorkoutCompleted={handleWorkoutCompleted} />
       {/* CHANGED: Removed the old props and added the new `onDataChange` prop */}
-      <WaterLogDialog 
-        open={showWaterDialog} 
-        onOpenChange={setShowWaterDialog} 
+      <WaterLogDialog
+        open={showWaterDialog}
+        onOpenChange={setShowWaterDialog}
         onDataChange={refreshWaterData}
       />
       <SleepLogDialog open={showSleepDialog} onOpenChange={setShowSleepDialog} onSleepLogged={handleSleepLogged} />
