@@ -752,19 +752,19 @@ export function CustomWorkoutBuilder({
           <ScrollArea className="h-96">
             {/* Body Parts Selection */}
             {currentStep === "body-parts" && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 ">
                 {bodyParts.map((bodyPart) => (
                   <Card
                     key={bodyPart.id}
                     className={cn(
-                      "glass-card border-glass-border cursor-pointer transition-all duration-300 hover:scale-105 hover:glow-accent",
+                      "glass-card border-glass-border cursor-pointer transition-all duration-300 hover:scale-105 hover:glow-accent ",
                       bodyPart.color,
                     )}
                     onClick={() => handleBodyPartSelect(bodyPart)}
                   >
                     <CardContent className="p-4 text-center">
                       <div className="text-3xl mb-2">{bodyPart.emoji}</div>
-                      <div className="font-semibold text-sm">
+                      <div className="font-semibold text-sm ">
                         {bodyPart.name}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">

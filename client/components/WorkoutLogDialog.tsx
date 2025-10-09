@@ -68,7 +68,7 @@ interface WorkoutPlan {
   type: string;
   duration: string;
   exercises: Exercise[];
-  difficulty: "Beginner" | "Intermediate" | "Advanced";
+  difficulty: "Beginner" | "Intermediate" | "Advanced" | "Custom";
 }
 
 interface WorkoutLogDialogProps {
@@ -327,6 +327,7 @@ export function WorkoutLogDialog({
   const [showExerciseDetails, setShowExerciseDetails] = useState(false);
   const [showCustomBuilder, setShowCustomBuilder] = useState(false);
   const [customWorkouts, setCustomWorkouts] = useState<WorkoutPlan[]>([]);
+  const [activeTab, setActiveTab] = useState("exercises");
 
   const updateExercise = (id: string, field: keyof Exercise, value: any) => {
     setCurrentExercises((prev) =>
@@ -499,7 +500,7 @@ export function WorkoutLogDialog({
 
   const handleCustomWorkoutCreated = (workout: {
     name: string;
-    exercises: Exercise[];
+    exercises: any[];
   }) => {
     const newWorkout: WorkoutPlan = {
       id: `custom-${Date.now()}`,
@@ -507,11 +508,21 @@ export function WorkoutLogDialog({
       type: "custom",
       duration: `${workout.exercises.length * 3}-${workout.exercises.length * 4} min`,
       difficulty: "Custom",
-      exercises: workout.exercises.map((ex) => ({ ...ex, completed: false })),
+      exercises: workout.exercises.map((ex) => ({
+        ...ex,
+        completed: false,
+        tips: ex.tips || "",
+        description: ex.description || "",
+        precautions: ex.precautions || [],
+        targetMuscles: ex.targetMuscles || [],
+        difficulty: ex.difficulty || "Beginner",
+        equipment: ex.equipment || [],
+      })),
     };
     setCustomWorkouts((prev) => [...prev, newWorkout]);
     setCurrentExercises(newWorkout.exercises);
     setSelectedPreset(newWorkout);
+    setActiveTab("exercises"); // Switch to exercises tab after creating
   };
 
   const completedCount = currentExercises.filter((ex) => ex.completed).length;
@@ -559,7 +570,7 @@ export function WorkoutLogDialog({
             </div>
           </div>
 
-          <Tabs defaultValue="exercises" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 glass-card h-10">
               <TabsTrigger value="exercises" className="text-xs">
                 Exercises
@@ -659,7 +670,8 @@ export function WorkoutLogDialog({
                         </div>
                         <Button
                           size="sm"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent event bubbling
                             setCurrentExercises(
                               preset.exercises.map((ex) => ({
                                 ...ex,
@@ -667,6 +679,7 @@ export function WorkoutLogDialog({
                               })),
                             );
                             setSelectedPreset(preset);
+                            setActiveTab("exercises"); // Switch to exercises tab
                           }}
                           className="glow-accent"
                         >
