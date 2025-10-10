@@ -431,7 +431,7 @@ export default function Index({ user, onLogout }: IndexProps) {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-bold">{macro.value}%</div>
-                          <div className="text-xs text-muted-foreground">{macro.calories} cal</div>
+                          <div className="text-xs text-muted-foreground">{Math.round(macro.calories*100)/100} cal</div>
                         </div>
                       </div>
                     ))}
