@@ -63,7 +63,7 @@ function TrackingCardContent({ logs, fetchWaterData }: { logs: any[]; fetchWater
 
   return (
     <div className="space-y-2">
-      <h4 className="font-medium text-sm">Today's Hydration Log</h4>
+      <h4 className="font-medium text-sm ">Today's Hydration Log</h4>
       {logs.length > 0 ? (
         logs.map((log, index) => (
           <div key={index} className="flex justify-between items-center py-1">
@@ -403,11 +403,11 @@ export default function DailyLog() {
     return (
       <>
         <Card
-          className="glass-card border-glass-border cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20 group btn-glow-effect ripple-effect"
+          className="glass-card border-glass-border cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20 group btn-glow-effect ripple-effect "
           onClick={() => setActiveModal(id)}
         >
           <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 ">
               <div className="flex items-center space-x-3">
                 <Icon
                   className={cn(
@@ -428,7 +428,7 @@ export default function DailyLog() {
             </div>
 
             <div className="text-center">
-              <div className="text-xl font-bold">
+              <div className="text-xl font-bold " >
                 {current} {unit}
               </div>
               {goal && (

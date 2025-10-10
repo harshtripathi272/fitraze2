@@ -67,15 +67,6 @@ export function TrackingModal({
           animation: "modalSlideUp 300ms ease-in-out",
         }}
       >
-        {/* Custom Close Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute top-4 right-4 h-8 w-8 p-0 z-10 hover:bg-white/10 transition-all duration-200"
-          onClick={() => onOpenChange(false)}
-        >
-          <X className="w-4 h-4" />
-        </Button>
 
         <DialogHeader className="pb-6">
           <DialogTitle className="flex items-center text-xl font-bold pr-8">

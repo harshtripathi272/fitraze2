@@ -339,20 +339,20 @@ export function WaterLogDialog({
             </Card>
 
             {/* Quick Add Buttons */}
-            <div>
+            <div className="">
               <h3 className="text-sm font-semibold mb-3">Quick Add</h3>
               <div className="grid grid-cols-3 gap-3">
                 {quickAddAmounts.map((item) => (
                   <Button
                     key={item.amount}
                     variant="outline"
-                    className="glass-card h-16 flex-col space-y-1 glow"
+                    className="glass-card h-32 flex-col space-y-1 glow hover:glow-accent transition-all duration-300 group"
                     onClick={() => handleAddWater(item.amount)}
                     disabled={isLoading}
                   >
                     <span className="text-lg">{item.icon}</span>
-                    <span className="text-xs">{item.amount}ml</span>
-                    <span className="text-xs text-muted-foreground">{item.label}</span>
+                    <span className="text-xs text-muted-foreground group-hover:text-background transition-colors">{item.amount}ml</span>
+                    <span className="text-xs text-muted-foreground group-hover:text-background transition-colors">{item.label}</span>
                   </Button>
                 ))}
               </div>
