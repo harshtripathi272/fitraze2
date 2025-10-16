@@ -75,6 +75,7 @@ def get_user_analytics(db: Session = Depends(get_db),current_user:models.User=De
     Goals are now sourced from the active FitnessGoal or calculated dynamically.
     """
     
+    
     user_id=current_user.user_id
 
     # --- CORRECTED: Efficiently load the user and their profile in one query ---
