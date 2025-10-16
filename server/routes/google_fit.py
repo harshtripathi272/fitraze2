@@ -7,10 +7,10 @@ from starlette.config import Config
 from dotenv import load_dotenv
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, JSONResponse
-#from starlette.middleware.sessions import SessionMiddleware
+
 
 load_dotenv()
-  # Load from .env
+
 oauth = OAuth()
 oauth.register(
     name="google",

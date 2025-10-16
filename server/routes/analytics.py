@@ -9,7 +9,7 @@ from server.auth import get_current_user
 from server import models
 from server.pydatnes import schemas
 from server.database import get_db
-
+from zoneinfo import ZoneInfo
 router = APIRouter(
     prefix="/api/v1",
     tags=["Analytics"]
@@ -20,6 +20,9 @@ def _calculate_default_goals(user_profile: models.UserProfile, latest_stat: mode
     Calculates default calorie and macro goals if no active FitnessGoal is set.
     Uses Mifflin-St Jeor formula for BMR and a DYNAMIC activity multiplier from the user's profile.
     """
+
+    
+
     # First guard clause: if user_profile itself is missing
     if not user_profile or not latest_stat:
         return (2000, 150, 200, 89)
@@ -64,16 +67,15 @@ def _calculate_default_goals(user_profile: models.UserProfile, latest_stat: mode
 
 
 
-@router.get("/users/{user_id}/analytics", response_model=schemas.AnalyticsResponse)
-def get_user_analytics(user_id: int, db: Session = Depends(get_db),current_user:models.User=Depends(get_current_user)):
+@router.get("/users/analytics", response_model=schemas.AnalyticsResponse)
+def get_user_analytics(db: Session = Depends(get_db),current_user:models.User=Depends(get_current_user)):
     """
     Retrieve a consolidated report of weekly analytics data for a user,
     including calories, macros, and weight progress.
     Goals are now sourced from the active FitnessGoal or calculated dynamically.
     """
     
-    if current_user.user_id!=user_id:
-        raise HTTPException(status_code=403,detail="Not authorized to access this user's analytics")
+    user_id=current_user.user_id
 
     # --- CORRECTED: Efficiently load the user and their profile in one query ---
     user = db.query(models.User).options(
@@ -112,13 +114,14 @@ def get_user_analytics(user_id: int, db: Session = Depends(get_db),current_user:
         authoritative_fat_goal = fat
         
     # --- The rest of your code from here is correct and requires no changes ---
-    today = datetime.utcnow().date()
-    start_of_week = today - timedelta(days=today.weekday())
+    ist=ZoneInfo("Asia/Kolkata")
+    today_ist=datetime.now(ist).date()
+    start_of_week=today_ist-timedelta(days=today_ist.weekday())
     
     nutrition_logs = db.query(models.DailyNutritionLog).filter(
         models.DailyNutritionLog.user_id == user_id,
         models.DailyNutritionLog.date >= start_of_week,
-        models.DailyNutritionLog.date <= today
+        models.DailyNutritionLog.date <= today_ist
     ).order_by(models.DailyNutritionLog.date).all()
 
     logs_by_day = {log.date.strftime('%a'): log for log in nutrition_logs}
@@ -151,7 +154,7 @@ def get_user_analytics(user_id: int, db: Session = Depends(get_db),current_user:
                 day=day_str, protein=protein_consumed, carbs=carbs_consumed, fat=fat_consumed
             ))
 
-    seven_weeks_ago = today - timedelta(weeks=4)
+    seven_weeks_ago = today_ist - timedelta(weeks=4)
     
     weight_logs = db.query(
         func.date_trunc('week', models.UserStat.date).label('week_start'),

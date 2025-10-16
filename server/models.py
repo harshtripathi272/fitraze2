@@ -257,6 +257,17 @@ class BedtimeReminder(Base):
     user = relationship("User", back_populates="bedtime_reminder")
 
 #Chat Sessions Models-------------------------------------
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("chat_sessions.session_id"))
+    role = Column(String(20))  # "user" or "assistant"
+    content = Column(Text)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    session = relationship("ChatSession", back_populates="messages")
+
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
     
@@ -268,6 +279,8 @@ class ChatSession(Base):
     is_active = Column(Boolean, default=True)
     
     user = relationship("User", back_populates="chat_sessions")
+    messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
+
    
 
 

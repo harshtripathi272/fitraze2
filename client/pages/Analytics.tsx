@@ -24,7 +24,7 @@ import {
 import { jwtDecode } from 'jwt-decode';
 
 const API_BASE_URL = "http://localhost:8000/api/v1"; // Or your actual API URL
-const USER_ID = 1;
+
 interface AnalyticsData {
   weekly_calories: { day: string; calories: number; goal: number }[];
   weekly_macros: {
@@ -92,14 +92,8 @@ export default function Analytics() {
             return;
           
         }
-        const decoded:JWTPayload=jwtDecode(token);
-        if(!decoded|| !decoded.sub){
-          setError("Invalid token");
-          return;
-        }
-        const userId=decoded.sub;
         const response = await axios.get<AnalyticsData>(
-          `${API_BASE_URL}/users/${userId}/analytics`,
+          `${API_BASE_URL}/users/analytics`,
           {
             headers:{
               Authorization:`Bearer ${token}`,

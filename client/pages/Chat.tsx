@@ -1,15 +1,11 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  MessageCircle, 
-  Send, 
-  Bot,
-  User,
-  Sparkles
-} from "lucide-react";
+import { Bot, User, Sparkles, Send } from "lucide-react";
+
+const API_BASE = "http://localhost:8000/api"; 
 
 export default function Chat() {
   const [message, setMessage] = useState("");
@@ -18,39 +14,116 @@ export default function Chat() {
       id: 1,
       text: "Hi! I'm your FitRaze AI assistant. I can help you with meal planning, workout suggestions, and answer any fitness questions you have!",
       sender: "ai",
-      timestamp: new Date()
+      timestamp: new Date(),
     },
-    {
-      id: 2,
-      text: "What would you like to know about your fitness journey today?",
-      sender: "ai", 
-      timestamp: new Date()
-    }
   ]);
 
-  const sendMessage = () => {
-    if (message.trim()) {
-      const newMessage = {
-        id: messages.length + 1,
-        text: message,
-        sender: "user",
-        timestamp: new Date()
-      };
-      setMessages([...messages, newMessage]);
-      setMessage("");
-      
-      // Simulate AI response
-      setTimeout(() => {
-        const aiResponse = {
-          id: messages.length + 2,
-          text: "Thanks for your message! This is a placeholder response. In the full app, I would provide personalized fitness advice based on your goals and progress.",
-          sender: "ai",
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiResponse]);
-      }, 1000);
-    }
+  const [embeddingReady, setEmbeddingReady] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  //Build embeddings when entered the chat page
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+    const token = localStorage.getItem("access_token") || storedUser.token;
+    if (!token) return;
+
+    const buildEmbeddings = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/build_embed`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        console.log("Embeddings built:", data);
+        setEmbeddingReady(true);
+      } catch (err) {
+        console.log("Error building embeddings:", err);
+        setEmbeddingReady(false);
+      }
+    };
+
+    buildEmbeddings();
+  }, []);
+
+  
+  const sendMessage = async () => {
+  const text = message.trim();
+  if (!text || !embeddingReady) {
+    console.log("Message empty or embeddings not ready");
+    return;
+  }
+
+  setMessage("");
+
+  const newMessage = {
+    id: messages.length + 1,
+    text,
+    sender: "user",
+    timestamp: new Date(),
   };
+
+  setMessages((prev) => [...prev, newMessage]);
+  setLoading(true);
+
+  try {
+    let sid = sessionId;
+    const storedUser = JSON.parse(localStorage.getItem("fitRazeUser")) || {};
+    const user_id = storedUser.userId;
+    if (!user_id) throw new Error("No user found");
+
+    if (!sid) {
+      const res = await fetch(`${API_BASE}/start_session?user_id=${user_id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to start session");
+      const data = await res.json();
+      sid = data.session_id;
+      setSessionId(sid);
+    }
+
+    const chatRes = await fetch(`${API_BASE}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id,
+        session_id: sid,
+        message: text,
+        require_retrieval: true,
+      }),
+    });
+
+    if (!chatRes.ok) throw new Error("Chat request failed");
+    const chatData = await chatRes.json();
+
+    const aiResponse = {
+      id: messages.length + 2,
+      text: chatData.assistant_message,
+      sender: "ai",
+      timestamp: new Date(chatData.timestamp),
+    };
+
+    setMessages((prev) => [...prev, aiResponse]);
+  } catch (err) {
+    console.error("Chat error:", err);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: messages.length + 2,
+        text: "Failed to connect to AI server.",
+        sender: "ai",
+        timestamp: new Date(),
+      },
+    ]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80 flex flex-col">
@@ -67,7 +140,9 @@ export default function Chat() {
               <Sparkles className="w-4 h-4 mr-1 text-accent" />
               FitRaze AI
             </h1>
-            <p className="text-sm text-muted-foreground">Your personal fitness assistant</p>
+            <p className="text-sm text-muted-foreground">
+              Your personal fitness assistant
+            </p>
           </div>
         </div>
       </div>
@@ -75,19 +150,47 @@ export default function Chat() {
       {/* Messages */}
       <div className="flex-1 px-4 space-y-4 overflow-y-auto">
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`flex items-start space-x-2 max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+          <div
+            key={msg.id}
+            className={`flex ${
+              msg.sender === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
+            <div
+              className={`flex items-start space-x-2 max-w-[80%] ${
+                msg.sender === "user"
+                  ? "flex-row-reverse space-x-reverse"
+                  : ""
+              }`}
+            >
               <Avatar className="w-8 h-8">
-                <AvatarFallback className={msg.sender === 'user' ? 'bg-accent/20 text-accent' : 'bg-primary/20 text-primary'}>
-                  {msg.sender === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                <AvatarFallback
+                  className={
+                    msg.sender === "user"
+                      ? "bg-accent/20 text-accent"
+                      : "bg-primary/20 text-primary"
+                  }
+                >
+                  {msg.sender === "user" ? (
+                    <User className="w-4 h-4" />
+                  ) : (
+                    <Bot className="w-4 h-4" />
+                  )}
                 </AvatarFallback>
               </Avatar>
-              
-              <Card className={`glass-card border-glass-border ${msg.sender === 'user' ? 'glow-accent' : 'glow'}`}>
+
+              <Card
+                className={`glass-card border-glass-border ${
+                  msg.sender === "user" ? "glow-accent" : "glow"
+                }`}
+              >
                 <CardContent className="p-3">
                   <p className="text-sm">{msg.text}</p>
                   <span className="text-xs text-muted-foreground">
-                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {msg.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </CardContent>
               </Card>
@@ -99,25 +202,25 @@ export default function Chat() {
       {/* Quick Suggestions */}
       <div className="px-4 py-2">
         <div className="flex flex-wrap gap-2 mb-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="glass-card text-xs"
             onClick={() => setMessage("What should I eat for lunch?")}
           >
             Meal suggestions
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="glass-card text-xs"
             onClick={() => setMessage("Plan my workout for today")}
           >
             Workout plan
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="glass-card text-xs"
             onClick={() => setMessage("How am I progressing towards my goals?")}
           >
@@ -126,27 +229,35 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Input */}
+      
       <div className="p-4">
         <div className="glass-card p-3 rounded-2xl border border-glass-border">
-          <div className="flex items-center space-x-2">
+          
+          <form onSubmit={(e)=>{
+            console.log("Form submitted");
+            console.log("sendMessage:", sendMessage);
+            e.preventDefault();
+            sendMessage();
+          }}
+          className="flex items-center space-x-2"
+          >
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ask me anything about fitness..."
               className="flex-1 bg-transparent border-none focus:ring-0 focus:ring-offset-0"
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             />
-            <Button 
-              size="sm" 
-              onClick={sendMessage}
+            <Button
+              type="submit"
+              size="sm"
               className="glow-accent"
-              disabled={!message.trim()}
+              disabled={!message.trim() || loading}
             >
               <Send className="w-4 h-4" />
             </Button>
+            </form>
           </div>
-        </div>
+        
       </div>
     </div>
   );
