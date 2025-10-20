@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, JSON,DECIMAL, ForeignKey,DateTime,Boolean,Text, Float,Enum,Time
+from sqlalchemy import Column, Integer, String, Date, JSON,DECIMAL, ForeignKey,DateTime,Boolean,Text, Float,Enum,Time,func
 from sqlalchemy.orm import relationship
 from server.database import Base
 from datetime import datetime,timezone
@@ -29,6 +29,8 @@ class User(Base):
     water_logs = relationship("WaterLog", back_populates="user")
     weekly_sleep_summaries = relationship("WeeklySleepSummary", back_populates="user", cascade="all, delete-orphan")
     bedtime_reminder = relationship("BedtimeReminder", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    embedding_cache_entries = relationship("UserEmbeddingsCache", back_populates="user", cascade="all, delete-orphan")
+
 
 
 class UserStat(Base):
@@ -281,7 +283,23 @@ class ChatSession(Base):
     user = relationship("User", back_populates="chat_sessions")
     messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
 
-   
+class UserEmbeddingsCache(Base):
+    __tablename__="user_embeddings_cache"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    date = Column(Date, nullable=False, index=True)
+    doc_hash = Column(String(128), nullable=False)
+    doc_metadata = Column(JSON, nullable=True)
+    last_indexed = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
+
+    # ensure only one cache entry per user per day
+    __table_args__ = (UniqueConstraint("user_id", "date", name="unique_user_date_cache"),)
+
+    # optional relationship to users table
+    user = relationship("User", back_populates="embedding_cache_entries")
+
+    def __repr__(self):
+        return f"<UserEmbeddingsCache user_id={self.user_id}, date={self.date}, hash={self.doc_hash[:8]}...>"
 
 
 

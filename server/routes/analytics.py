@@ -3,9 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta, date
 from typing import List
-from sqlalchemy.orm import  joinedload # Make sure joinedload is imported
+from sqlalchemy.orm import  joinedload 
 from server.auth import get_current_user
-# Adjust these imports based on your project structure
 from server import models
 from server.pydatnes import schemas
 from server.database import get_db
@@ -14,27 +13,22 @@ router = APIRouter(
     prefix="/api/v1",
     tags=["Analytics"]
 )
-   # --- CORRECTED: Helper function to use 'age' directly instead of 'date_of_birth' ---
+   
 def _calculate_default_goals(user_profile: models.UserProfile, latest_stat: models.UserStat):
     """
     Calculates default calorie and macro goals if no active FitnessGoal is set.
     Uses Mifflin-St Jeor formula for BMR and a DYNAMIC activity multiplier from the user's profile.
     """
 
-    
-
-    # First guard clause: if user_profile itself is missing
     if not user_profile or not latest_stat:
         return (2000, 150, 200, 89)
-
-    # Second guard: check fields individually
     if not (user_profile.age and user_profile.gender and latest_stat.weight_kg and latest_stat.height_cm):
         return (2000, 150, 200, 89)
 
-    # --- 1. Use the age directly from the profile ---
+    
     age = user_profile.age
 
-    # --- 2. Calculate BMR using Mifflin-St Jeor ---
+    # Calculate BMR using Mifflin-St Jeor 
     weight_kg = float(latest_stat.weight_kg)
     height_cm = float(latest_stat.height_cm)
 
@@ -45,7 +39,7 @@ def _calculate_default_goals(user_profile: models.UserProfile, latest_stat: mode
     else:
         bmr = (10 * weight_kg) + (6.25 * height_cm) - (5 * age) - 78
 
-    # --- 3. Dynamically determine the activity multiplier from the user's profile ---
+    # Dynamically determine the activity multiplier from the user's profile 
     activity_multipliers = {
         'sedentary': 1.2,
         'lightly_active': 1.375,
@@ -54,10 +48,10 @@ def _calculate_default_goals(user_profile: models.UserProfile, latest_stat: mode
     }
     activity_multiplier = activity_multipliers.get(user_profile.activity_level, 1.375)
 
-    # --- 4. Calculate TDEE ---
+    # Calculate TDEE 
     tdee = bmr * activity_multiplier
 
-    # --- 5. Calculate Macros ---
+    # Calculate Macros 
     calories = round(tdee)
     protein = round((tdee * 0.30) / 4)
     carbs = round((tdee * 0.40) / 4)
@@ -78,7 +72,6 @@ def get_user_analytics(db: Session = Depends(get_db),current_user:models.User=De
     
     user_id=current_user.user_id
 
-    # --- CORRECTED: Efficiently load the user and their profile in one query ---
     user = db.query(models.User).options(
         joinedload(models.User.profile)
     ).filter(models.User.user_id == user_id).first()
@@ -86,8 +79,6 @@ def get_user_analytics(db: Session = Depends(get_db),current_user:models.User=De
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # --- ADDED: The missing query to define latest_user_stat ---
-    # Get the most recent user stat entry for weight/height calculation
     latest_user_stat = db.query(models.UserStat).filter(
         models.UserStat.user_id == user_id
     ).order_by(models.UserStat.date.desc()).first()
@@ -114,7 +105,6 @@ def get_user_analytics(db: Session = Depends(get_db),current_user:models.User=De
         authoritative_carbs_goal = carbs
         authoritative_fat_goal = fat
         
-    # --- The rest of your code from here is correct and requires no changes ---
     ist=ZoneInfo("Asia/Kolkata")
     today_ist=datetime.now(ist).date()
     start_of_week=today_ist-timedelta(days=today_ist.weekday())

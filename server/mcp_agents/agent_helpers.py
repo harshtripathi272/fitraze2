@@ -5,11 +5,12 @@ from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from qdrant_client import QdrantClient
 from uuid import uuid4
+from datetime import date
 
 # Environment variables
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
 QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY", None)
-QDRANT_COLLECTION = os.environ.get("QDRANT_COLLECTION", "user_knowledge_base")
+QDRANT_COLLECTION = os.environ.get("QDRANT_COLLECTION", "user_kb")
 HF_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 # Single client + vector store for this process
@@ -50,12 +51,11 @@ def retrieve_user_docs(user_id: int, query_type: str, top_k: int = 4) -> List[Do
     Retrieve top_k documents for the given user and query.
     Returns LlamaIndex Document-like objects.
     """
+    
     retriever = _index.as_retriever(similarity_top_k=top_k)
-    
-    # Bias retrieval by prefixing user hint; LlamaIndex will handle metadata matching in future versions
-    full_query = f"User {user_id}: {query_type}"
+    today_str = date.today().isoformat()
+    full_query = f"User {user_id} Date {today_str}: {query_type}"
     results = retriever.retrieve(full_query)
-    
     return results
 
 
