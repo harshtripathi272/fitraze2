@@ -29,7 +29,8 @@ origins = [
     "http://localhost:5173",  # The default address for Vite React apps
     "http://127.0.0.1:5173",
     "http://localhost:8000",
-    "http://127.0.0.1:8000"  # If you are using a different port
+    "http://127.0.0.1:8000",
+    "http://localhost:8004",  # If you are using a different port
 ]
 app.add_middleware(
     CORSMiddleware,

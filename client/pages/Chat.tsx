@@ -52,78 +52,81 @@ export default function Chat() {
 
   
   const sendMessage = async () => {
-  const text = message.trim();
-  if (!text || !embeddingReady) {
-    console.log("Message empty or embeddings not ready");
-    return;
-  }
-
-  setMessage("");
-
-  const newMessage = {
-    id: messages.length + 1,
-    text,
-    sender: "user",
-    timestamp: new Date(),
-  };
-
-  setMessages((prev) => [...prev, newMessage]);
-  setLoading(true);
-
-  try {
-    let sid = sessionId;
-    const storedUser = JSON.parse(localStorage.getItem("fitRazeUser")) || {};
-    const user_id = storedUser.userId;
-    if (!user_id) throw new Error("No user found");
-
-    if (!sid) {
-      const res = await fetch(`${API_BASE}/start_session?user_id=${user_id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) throw new Error("Failed to start session");
-      const data = await res.json();
-      sid = data.session_id;
-      setSessionId(sid);
+    const text = message.trim();
+    const storedUser = JSON.parse(localStorage.getItem("user")) || {};
+    const token = localStorage.getItem("access_token") || storedUser.token;
+    if (!text || !embeddingReady) {
+      console.log("Message empty or embeddings not ready");
+      return;
     }
 
-    const chatRes = await fetch(`${API_BASE}/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id,
-        session_id: sid,
-        message: text,
-        require_retrieval: true,
-      }),
-    });
+    setMessage("");
 
-    if (!chatRes.ok) throw new Error("Chat request failed");
-    const chatData = await chatRes.json();
-
-    const aiResponse = {
-      id: messages.length + 2,
-      text: chatData.assistant_message,
-      sender: "ai",
-      timestamp: new Date(chatData.timestamp),
+    const newMessage = {
+      id: messages.length + 1,
+      text,
+      sender: "user",
+      timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, aiResponse]);
-  } catch (err) {
-    console.error("Chat error:", err);
-    setMessages((prev) => [
-      ...prev,
-      {
+    setMessages((prev) => [...prev, newMessage]);
+    setLoading(true);
+
+    try {
+      let sid = sessionId;
+      const storedUser = JSON.parse(localStorage.getItem("fitRazeUser")) || {};
+      const user_id = storedUser.userId;
+      if (!user_id) throw new Error("No user found");
+
+      if (!sid) {
+        const res = await fetch(`${API_BASE}/start_session?user_id=${user_id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json"},
+        });
+        if (!res.ok) throw new Error("Failed to start session");
+        const data = await res.json();
+        sid = data.session_id;
+        setSessionId(sid);
+      }
+
+      const chatRes = await fetch(`${API_BASE}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", 
+                  Authorization:`Bearer ${token}`},
+        body: JSON.stringify({
+          user_id,
+          session_id: sid,
+          message: text,
+          require_retrieval: true,
+        }),
+      });
+
+      if (!chatRes.ok) throw new Error("Chat request failed");
+      const chatData = await chatRes.json();
+
+      const aiResponse = {
         id: messages.length + 2,
-        text: "Failed to connect to AI server.",
+        text: chatData.assistant_message,
         sender: "ai",
-        timestamp: new Date(),
-      },
-    ]);
-  } finally {
-    setLoading(false);
-  }
-};
+        timestamp: new Date(chatData.timestamp),
+      };
+
+      setMessages((prev) => [...prev, aiResponse]);
+    } catch (err) {
+      console.error("Chat error:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: messages.length + 2,
+          text: "Failed to connect to AI server.",
+          sender: "ai",
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80 flex flex-col">

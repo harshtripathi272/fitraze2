@@ -12,7 +12,7 @@ load_dotenv()
 oauth2_scheme=OAuth2PasswordBearer(tokenUrl="/login")
 
 def get_current_user(token:str=Depends(oauth2_scheme),db:Session=Depends(get_db))->User:
-    print("🔍 get_current_user called")
+    # print("get_current_user called")
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate authentication credentials",
@@ -24,7 +24,7 @@ def get_current_user(token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)
             os.getenv('SECRET_KEY'),
             algorithms=[os.getenv("ALGORITHM")]
         )
-        print(payload)
+        # print(payload)
         user_id:str=payload.get("sub")
         if user_id is None:
             raise credentials_exception
